@@ -1,6 +1,5 @@
 package com.semantive.geoys.tables
 
-import com.semantive.geoys.dunno.pgSlickDriver.simple._
 import com.vividsolutions.jts.geom.Point
 
 /**

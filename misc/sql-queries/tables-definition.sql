@@ -12,7 +12,7 @@ CREATE TABLE Country (
   iso3         CHAR(3)              UNIQUE                     NOT NULL,
   name         VARCHAR(200)                                    NOT NULL,
   asciiName    VARCHAR(200)                                    NOT NULL,
-  continentId  INTEGER              REFERENCES Continents(id)  NOT NULL,
+  continentId  INTEGER              REFERENCES Continent (id)  NOT NULL,
   location     GEOMETRY(Point, 4326)                           NOT NULL,
   population   INTEGER                                         NOT NULL,
   geoId        INTEGER              UNIQUE                     NOT NULL
@@ -20,8 +20,8 @@ CREATE TABLE Country (
 
 -- Neighbours of a country
 CREATE TABLE Country_Neighbour (
-  countryId    INTEGER              REFERENCES countries(id),
-  neighbourId  INTEGER              REFERENCES countries(id),
+  countryId    INTEGER              REFERENCES Country(id),
+  neighbourId  INTEGER              REFERENCES Country(id),
 
   PRIMARY KEY (countryId, neighbourId)
 );
@@ -42,8 +42,8 @@ CREATE TABLE ADM1 (
   asciiName  VARCHAR(200)                                    NOT NULL,
   location   GEOMETRY(Point, 4326)                           NOT NULL,
   admCode    INTEGER                                         NOT NULL,
-  countryId  INTEGER                REFERENCES countries(id) NOT NULL,
-  timezone   INTEGER                REFERENCES timezones(id) NOT NULL,
+  countryId  INTEGER                REFERENCES Country(id)   NOT NULL,
+  timezone   INTEGER                REFERENCES Timezone(id)  NOT NULL,
   population INTEGER                                         NOT NULL,
   geoId      INTEGER                UNIQUE                   NOT NULL
 );
@@ -54,8 +54,8 @@ CREATE TABLE ADM2 (
   asciiName  VARCHAR(200)                                    NOT NULL,
   location   GEOMETRY(Point, 4326)                           NOT NULL,
   admCode    INTEGER                                         NOT NULL,
-  countryId  INTEGER                REFERENCES countries(id) NOT NULL,
-  timezone   INTEGER                REFERENCES timezones(id) NOT NULL,
+  countryId  INTEGER                REFERENCES Country(id)   NOT NULL,
+  timezone   INTEGER                REFERENCES Timezone(id)  NOT NULL,
   population INTEGER                                         NOT NULL,
   adm1Id     INTEGER                REFERENCES ADM1(id)      NOT NULL,
   geoId      INTEGER                UNIQUE                   NOT NULL
@@ -66,8 +66,8 @@ CREATE TABLE ADM3 (
   name       VARCHAR(200)                                    NOT NULL,
   asciiName  VARCHAR(200)                                    NOT NULL,
   location   GEOMETRY(Point, 4326)                           NOT NULL,
-  countryId  INTEGER                REFERENCES countries(id) NOT NULL,
-  timezone   INTEGER                REFERENCES timezones(id) NOT NULL,
+  countryId  INTEGER                REFERENCES Country(id)   NOT NULL,
+  timezone   INTEGER                REFERENCES Timezone(id)  NOT NULL,
   population INTEGER                                         NOT NULL,
   adm1Id     INTEGER                REFERENCES ADM1(id)      NOT NULL,
   adm2Id     INTEGER                REFERENCES ADM2(id)      NOT NULL,
@@ -79,8 +79,8 @@ CREATE TABLE ADM4 (
   name       VARCHAR(200)                                    NOT NULL,
   asciiName  VARCHAR(200)                                    NOT NULL,
   location   GEOMETRY(Point, 4326)                           NOT NULL,
-  countryId  INTEGER                REFERENCES countries(id) NOT NULL,
-  timezone   INTEGER                REFERENCES timezones(id) NOT NULL,
+  countryId  INTEGER                REFERENCES Country(id)   NOT NULL,
+  timezone   INTEGER                REFERENCES Timezone(id)  NOT NULL,
   population INTEGER                                         NOT NULL,
   adm1Id     INTEGER                REFERENCES ADM1(id)      NOT NULL,
   adm2Id     INTEGER                REFERENCES ADM2(id)      NOT NULL,
@@ -94,8 +94,8 @@ CREATE TABLE Place (
   name       VARCHAR(200)                                    NOT NULL,
   asciiName  VARCHAR(200)                                    NOT NULL,
   location   GEOMETRY(Point, 4326)                           NOT NULL,
-  countryId  INTEGER                REFERENCES countries(id) NOT NULL,
-  timezone   INTEGER                REFERENCES timezones(id) NOT NULL,
+  countryId  INTEGER                REFERENCES Country(id)   NOT NULL,
+  timezone   INTEGER                REFERENCES Timezone(id)  NOT NULL,
   population INTEGER                                         NOT NULL,
   adm1Id     INTEGER                REFERENCES ADM1(id),
   adm2Id     INTEGER                REFERENCES ADM2(id),
