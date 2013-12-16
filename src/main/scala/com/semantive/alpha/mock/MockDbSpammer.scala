@@ -7,6 +7,11 @@ import scala.slick.session.Database.threadLocalSession
 
 /**
  * Mock object, used only for tests.
+ *
+ * FixMe: database connection data - should not be stored in the code
+ * FixMe: file paths should not be this specific (and platform-dependent)
+ * FixMe: a lot of descriptions
+ * FixMe: JTS
  */
 object MockDbSpammer
 {
@@ -14,16 +19,38 @@ object MockDbSpammer
 
   /**
    * Filters out non-data (e.g. comments) from the geonames data source file.
-   *
+   * @param line line from the raw source file from geonames dump
+   * @return false, if line is a comment
+   */
+  private def sourceFileLineFilter(line: String): Boolean = {
+    ! (line(0) == '#' || line(0) == ' ')
+  }
+
+  /**
+   * FixMe: description
    * @param line
    * @return
    */
-  private def sourceFileLineFilter(line: String): Boolean = {
-    if(line(0) == '#' || line(0) == ' ')
+  private def sourceAllCountriesLineFilter(line: String): Boolean = {
+    if(! sourceFileLineFilter(line))
       false
     else
-      line.split("\t")(16) != ""
+      line.split("\t")(16) != "" // FixMe: what if the array is shorter
   }
+
+  /**
+   * FixMe: description
+   * @param columnNo  index of filtered column
+   * @param columnVal value to be matched
+   * @return true, if
+   */
+  private def sourceColumnPrefixFilter(columnNo: Int, columnVal: String): (String => Boolean) = {
+    (line: String) => line.split("\t")(columnNo).length >= columnVal.length && line.split("\t")(columnNo).substring(0, columnVal.length) == columnVal
+  }
+
+
+
+  // <editor-fold desc="Continent import">
 
   /**
    * Inserts continents' data into the database.
@@ -31,43 +58,55 @@ object MockDbSpammer
    */
   def insertContinents(): Unit = {
     dbSession withSession {
-      Continent.forInsert.insert("Africa", "Africa", 6255146)
-      Continent.forInsert.insert("Asia", "Asia", 6255147)
-      Continent.forInsert.insert("Europe", "Europe", 6255148)
-      Continent.forInsert.insert("North America", "North America", 6255149)
-      Continent.forInsert.insert("South America", "South America", 6255150)
-      Continent.forInsert.insert("Oceania", "Oceania", 6255151)
-      Continent.forInsert.insert("Antarctica", "Antarctica", 6255152)
+      Continent.forInsert.insert("AF", "Africa", "Africa", 6255146)
+      Continent.forInsert.insert("AS", "Asia", "Asia", 6255147)
+      Continent.forInsert.insert("EU", "Europe", "Europe", 6255148)
+      Continent.forInsert.insert("NA", "North America", "North America", 6255149)
+      Continent.forInsert.insert("SA", "South America", "South America", 6255150)
+      Continent.forInsert.insert("OC", "Oceania", "Oceania", 6255151)
+      Continent.forInsert.insert("AN", "Antarctica", "Antarctica", 6255152)
     }
   }
+
+  // </editor-fold>
+
+  // <editor-fold desc="Country import">
 
   /**
    * Inserts countries' data into the database.
    *  Uses countryInfo.txt and allCountries.txt from the geonames dump.
    */
-  def insertCountries(): Unit = {
+  def importCountries(): Unit = {
     // 1: countryInfo
     val countriesRawFile = io.Source.fromFile("C:\\Geonames\\countryInfo.txt")
-    countriesRawFile.getLines().filter(sourceFileLineFilter).foreach(insertBasicCountryLine)
+    countriesRawFile.getLines().filter(sourceFileLineFilter).filter(line => line.split("\t")(16).length > 0).foreach(insertBasicCountryLine)
     countriesRawFile.close()
 
     // 2: allCountries
     val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\allCountries.txt")
-    allCountriesRawFile.getLines().filter(sourceFileLineFilter).filter(line => line.split("\t")(7).length >= 3 && line.split("\t")(7).substring(0, 3) == "PCL").foreach(insertDetailedCountryLine)
+    allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "PCL")).foreach(insertDetailedCountryLine)
     allCountriesRawFile.close()
   }
 
-  // <editor-fold desc="Country helpers">
-
+  /**
+   * 1st step: inserts to the db data from countryInfo file.
+   * @param lineStr prefiltered line from the source file
+   */
   private def insertBasicCountryLine(lineStr: String): Unit = {
     def line = lineStr.split("\t")
 
     dbSession withSession {
-      // FixMe: continent id
-      Country.forInsert.insert(line(0), line(1), line(4), line(4), new Point(new Coordinate(0, 0), new PrecisionModel(), 4326), 0, line(7).toLong, line(16).toInt)
+      def continentQuery = for { c <- Continent if c.code === line(8) } yield c.id
+      def continentId = continentQuery.first
+
+      Country.forInsert.insert(line(0), line(1), line(3), line(4), line(4), None, continentId, line(7).toLong,line(16).toInt)
     }
   }
 
+  /**
+   * 2nd step: inserts detailed data (e.g. location) from the allCountries file.
+   * @param line prefiltered line from the source file
+   */
   private def insertDetailedCountryLine(line: String): Unit = {
     dbSession withSession {
       val q = for { c <- Country if c.geoId === line.split("\t")(0).toInt } yield c.location
@@ -77,9 +116,81 @@ object MockDbSpammer
 
   // </editor-fold>
 
+  // <editor-fold desc="Timezone import">
+
+  def importTimezones(): Unit = {
+    val timezonesRawFile = io.Source.fromFile("C:\\Geonames\\timeZones.txt")
+    timezonesRawFile.getLines().filter(sourceFileLineFilter).foreach(insertTimezoneLine)
+    timezonesRawFile.close()
+  }
+
+  private def insertTimezoneLine(lineStr: String): Unit = {
+    val line = lineStr.split("\t")
+
+    dbSession withSession {
+
+      def countryQuery = for { c <- Country if c.iso2 === line(0) } yield c.id
+      def countryId = countryQuery.first
+
+      Timezone.forInsert.insert(countryId, line(1), line(2).toFloat, line(3).toFloat, line(4).toFloat)
+    }
+  }
+
+  // </editor-fold>
+
+  // <editor-fold desc="ADM1 import">
+
+  def importAdm1(): Unit = {
+    // 1: admin1Codes
+//    val timezonesRawFile = io.Source.fromFile("C:\\Geonames\\admin1CodesASCII.txt")
+//    timezonesRawFile.getLines().filter(sourceFileLineFilter).foreach(insertBasicAdm1Line)
+//    timezonesRawFile.close()
+
+    // 2: allCountries
+    val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\allCountries.txt")
+    allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "ADM1")).foreach(insertDetailedAdm1Line)
+    allCountriesRawFile.close()
+  }
+
+  private def insertBasicAdm1Line(lineStr: String): Unit = {
+    def line = lineStr.split("\t")
+
+    dbSession withSession {
+
+      println("1st: " + line)
+      def countryQuery = for { c <- Country if c.iso2 === line(0).split("\\.")(0) } yield c.id
+      def countryId = countryQuery.first
+
+      ADM1.forInsert.insert(line(1), line(2), None, countryId, line(0).split("\\.")(1), None, None, line(3).toInt)
+    }
+  }
+
+  /**
+   * 2nd step: inserts detailed data (e.g. location) from the allCountries file.
+   * @param line prefiltered line from the source file
+   */
+  private def insertDetailedAdm1Line(lineStr: String): Unit = {
+    println("2nd: " + lineStr)
+    def line = lineStr.split("\t")
+
+    dbSession withSession {
+      def timezoneQuery = for { tz <- Timezone if tz.name === line(17).toString } yield tz.id
+      def timezoneId = timezoneQuery.first
+
+      // FixMe: some rows doesnt't have timezone
+      val q = for { a <- ADM1 if a.geoId === line(0).toInt } yield (a.location ~ a.population ~ a.timezoneId)
+      q.update((new Point(new Coordinate(line(5).toFloat, line(4).toFloat), new PrecisionModel(), 4326), line(14).toLong, timezoneId))
+    }
+  }
+
+  // </editor-fold>
+
   def main(arguments: Array[String]): Unit =
   {
 //    insertContinents()
-//    insertCountries()
+//    importCountries()
+//    importTimezones()
+    importAdm1()
+
   }
 }
