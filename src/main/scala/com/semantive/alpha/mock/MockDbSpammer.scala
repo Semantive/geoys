@@ -4,6 +4,8 @@ import com.semantive.geoys.dunno.pgSlickDriver.simple._
 import com.semantive.geoys.tables._
 import com.vividsolutions.jts.geom._
 import scala.slick.session.Database.threadLocalSession
+import scala.slick.jdbc.{StaticQuery => Q, GetResult}
+import scala.Predef._
 
 /**
  * Mock object, used only for tests.
@@ -15,10 +17,14 @@ import scala.slick.session.Database.threadLocalSession
  * FixMe: IMPORTANT - logger
  * FixMe: IMPORTANT - handle incorrect geonames dumps
  * FixMe: filters: recursive, not chained
+ *
+ * ToDo:
  */
 object MockDbSpammer
 {
-  private implicit val dbSession = Database.forURL("jdbc:postgresql://127.0.0.1/geoys", user = "geoys", password = "---", driver = "org.postgresql.Driver")
+  private implicit val dbSession = Database.forURL("jdbc:postgresql://127.0.0.1/geoys", user = "geoys", password = "geoys", driver = "org.postgresql.Driver")
+
+  private val dumpDirectory = "C:\\Geonames\\";
 
   /**
    * Filters out non-data (e.g. comments) from the geonames data source file.
@@ -79,12 +85,12 @@ object MockDbSpammer
    */
   def importCountries(): Unit = {
     // 1: countryInfo
-    val countriesRawFile = io.Source.fromFile("C:\\Geonames\\countryInfo.txt")
+    val countriesRawFile = io.Source.fromFile(dumpDirectory + "countryInfo.txt")
     countriesRawFile.getLines().filter(sourceFileLineFilter).filter(line => line.split("\t")(16).length > 0).foreach(insertBasicCountryLine)
     countriesRawFile.close()
 
     // 2: allCountries
-    val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\allCountries.txt")
+    val allCountriesRawFile = io.Source.fromFile(dumpDirectory + "allCountries.txt")
     allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "PCL")).foreach(insertDetailedCountryLine)
     allCountriesRawFile.close()
   }
@@ -120,7 +126,7 @@ object MockDbSpammer
   // <editor-fold desc="Timezone import">
 
   def importTimezones(): Unit = {
-    val timezonesRawFile = io.Source.fromFile("C:\\Geonames\\timeZones.txt")
+    val timezonesRawFile = io.Source.fromFile(dumpDirectory + "timeZones.txt")
     timezonesRawFile.getLines().filter(sourceFileLineFilter).foreach(insertTimezoneLine)
     timezonesRawFile.close()
   }
@@ -143,12 +149,12 @@ object MockDbSpammer
 
   def importAdm1(): Unit = {
     // 1: admin1Codes
-    val timezonesRawFile = io.Source.fromFile("C:\\Geonames\\admin1CodesASCII.txt")
+    val timezonesRawFile = io.Source.fromFile(dumpDirectory + "admin1CodesASCII.txt")
     timezonesRawFile.getLines().filter(sourceFileLineFilter).foreach(insertBasicAdm1Line)
     timezonesRawFile.close()
 
     // 2: allCountries
-    val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\allCountries.txt")
+    val allCountriesRawFile = io.Source.fromFile(dumpDirectory + "allCountries.txt")
     allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "ADM1")).foreach(insertDetailedAdm1Line)
     allCountriesRawFile.close()
   }
@@ -187,12 +193,12 @@ object MockDbSpammer
 
   def importAdm2(): Unit = {
     // 1: admin2Codes
-    val timezonesRawFile = io.Source.fromFile("C:\\Geonames\\admin2Codes.txt")
+    val timezonesRawFile = io.Source.fromFile(dumpDirectory + "admin2Codes.txt")
     timezonesRawFile.getLines().filter(sourceFileLineFilter).foreach(insertBasicAdm2Line)
     timezonesRawFile.close()
 
     // 2: allCountries
-    val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\PL.txt")
+    val allCountriesRawFile = io.Source.fromFile(dumpDirectory + "PL.txt")
     allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "ADM2")).foreach(insertDetailedAdm2Line)
     allCountriesRawFile.close()
   }
@@ -235,7 +241,7 @@ object MockDbSpammer
   // <editor-fold desc="ADM3 import">
 
   def importAdm3(): Unit = {
-    val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\PL.txt")
+    val allCountriesRawFile = io.Source.fromFile(dumpDirectory + "PL.txt")
     allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "ADM3")).foreach(insertAdm3Line)
     allCountriesRawFile.close()
   }
@@ -268,7 +274,7 @@ object MockDbSpammer
   // <editor-fold desc="ADM4 import">
 
   def importAdm4(): Unit = {
-    val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\PL.txt")
+    val allCountriesRawFile = io.Source.fromFile(dumpDirectory + "PL.txt")
     allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "ADM4")).foreach(insertAdm4Line)
     allCountriesRawFile.close()
   }
@@ -310,5 +316,6 @@ object MockDbSpammer
 //    importAdm2()
 //    importAdm3()
 //    importAdm4()
+    }
   }
 }
