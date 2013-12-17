@@ -21,4 +21,6 @@ object ADM1 extends FeatureTable[(Option[Int], String, String, Option[Point], In
 
   /** REFERENCES key on country.id. */
   def fkAdm1Country = foreignKey("fk_" + tableName +  "_country", countryId, Country)(_.id)
+  /** REFERENCES key on timezone.id. */
+  def fkAdm1Timezone = foreignKey("fk_" + tableName + "_timezone", timezoneId, Timezone)(_.id)
 }

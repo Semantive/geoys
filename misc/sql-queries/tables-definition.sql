@@ -44,53 +44,55 @@ CREATE TABLE ADM1 (
   name        VARCHAR(200)                                    NOT NULL,
   ascii_name  VARCHAR(200)                                    NOT NULL,
   location    GEOMETRY(Point, 4326),
-  adm_code    VARCHAR(40)                                     NOT NULL,
+  adm_code    VARCHAR(80)                                     NOT NULL,
   country_id  INTEGER                REFERENCES Country(id)   NOT NULL,
   timezone_id INTEGER                REFERENCES Timezone(id),
   population  INTEGER,
   geo_id      INTEGER                UNIQUE                   NOT NULL
 );
 
--- CREATE TABLE ADM2 (
---   id         SERIAL                 PRIMARY KEY,
---   name       VARCHAR(200)                                    NOT NULL,
---   ascii_name VARCHAR(200)                                    NOT NULL,
---   location   GEOMETRY(Point, 4326)                           NOT NULL,
---   adm_code   INTEGER                                         NOT NULL,
---   country_id INTEGER                REFERENCES Country(id)   NOT NULL,
---   timezone_id INTEGER                REFERENCES Timezone(id)  NOT NULL,
---   population INTEGER                                         NOT NULL,
---   adm1_id    INTEGER                REFERENCES ADM1(id)      NOT NULL,
---   geo_id     INTEGER                UNIQUE                   NOT NULL
--- );
---
--- CREATE TABLE ADM3 (
---   id         SERIAL                 PRIMARY KEY,
---   name       VARCHAR(200)                                    NOT NULL,
---   ascii_name VARCHAR(200)                                    NOT NULL,
---   location   GEOMETRY(Point, 4326)                           NOT NULL,
---   country_id INTEGER                REFERENCES Country(id)   NOT NULL,
---   timezone   INTEGER                REFERENCES Timezone(id)  NOT NULL,
---   population INTEGER                                         NOT NULL,
---   adm1_id    INTEGER                REFERENCES ADM1(id)      NOT NULL,
---   adm2_id    INTEGER                REFERENCES ADM2(id)      NOT NULL,
---   geo_id     INTEGER                UNIQUE                   NOT NULL
--- );
---
--- CREATE TABLE ADM4 (
---   id         SERIAL                 PRIMARY KEY,
---   name       VARCHAR(200)                                    NOT NULL,
---   ascii_name VARCHAR(200)                                    NOT NULL,
---   location   GEOMETRY(Point, 4326)                           NOT NULL,
---   country_id INTEGER                REFERENCES Country(id)   NOT NULL,
---   timezone_id INTEGER                REFERENCES Timezone(id)  NOT NULL,
---   population INTEGER                                         NOT NULL,
---   adm1_id    INTEGER                REFERENCES ADM1(id)      NOT NULL,
---   adm2_id    INTEGER                REFERENCES ADM2(id)      NOT NULL,
---   adm3_id    INTEGER                REFERENCES ADM3(id)      NOT NULL,
---   geo_id     INTEGER                UNIQUE                   NOT NULL
--- );
---
+CREATE TABLE ADM2 (
+  id          SERIAL                 PRIMARY KEY,
+  name        VARCHAR(200)                                    NOT NULL,
+  ascii_name  VARCHAR(200)                                    NOT NULL,
+  location    GEOMETRY(Point, 4326),
+  adm_code    VARCHAR(20)                                     NOT NULL,
+  country_id  INTEGER                REFERENCES Country(id)   NOT NULL,
+  timezone_id INTEGER                REFERENCES Timezone(id),
+  population  INTEGER,
+  adm1_id     INTEGER                REFERENCES ADM1(id)      NOT NULL,
+  geo_id      INTEGER                UNIQUE                   NOT NULL
+);
+
+CREATE TABLE ADM3 (
+  id          SERIAL                 PRIMARY KEY,
+  name        VARCHAR(200)                                    NOT NULL,
+  ascii_name  VARCHAR(200)                                    NOT NULL,
+  location    GEOMETRY(Point, 4326),
+  country_id  INTEGER                REFERENCES Country(id)   NOT NULL,
+  timezone_id INTEGER                REFERENCES Timezone(id),
+  adm_code    VARCHAR(20)                                     NOT NULL,
+  population  INTEGER,
+  adm1_id     INTEGER                REFERENCES ADM1(id)      NOT NULL,
+  adm2_id     INTEGER                REFERENCES ADM2(id)      NOT NULL,
+  geo_id      INTEGER                UNIQUE                   NOT NULL
+);
+
+CREATE TABLE ADM4 (
+  id          SERIAL                 PRIMARY KEY,
+  name        VARCHAR(200)                                    NOT NULL,
+  ascii_name  VARCHAR(200)                                    NOT NULL,
+  location    GEOMETRY(Point, 4326),
+  country_id  INTEGER                REFERENCES Country(id)   NOT NULL,
+  timezone_id INTEGER                REFERENCES Timezone(id),
+  adm_code    VARCHAR(20)                                     NOT NULL,
+  population  INTEGER,
+  adm1_id     INTEGER                REFERENCES ADM1(id)      NOT NULL,
+  adm2_id     INTEGER                REFERENCES ADM2(id)      NOT NULL,
+  adm3_id     INTEGER                REFERENCES ADM3(id)      NOT NULL,
+  geo_id      INTEGER                UNIQUE                   NOT NULL
+);
+
 -- -- Populated places
 -- CREATE TABLE Place (
 --   id         INTEGER                PRIMARY KEY,

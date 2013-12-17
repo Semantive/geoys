@@ -12,6 +12,9 @@ import scala.slick.session.Database.threadLocalSession
  * FixMe: file paths should not be this specific (and platform-dependent)
  * FixMe: a lot of descriptions
  * FixMe: JTS
+ * FixMe: IMPORTANT - logger
+ * FixMe: IMPORTANT - handle incorrect geonames dumps
+ * FixMe: filters: recursive, not chained
  */
 object MockDbSpammer
 {
@@ -47,8 +50,6 @@ object MockDbSpammer
   private def sourceColumnPrefixFilter(columnNo: Int, columnVal: String): (String => Boolean) = {
     (line: String) => line.split("\t")(columnNo).length >= columnVal.length && line.split("\t")(columnNo).substring(0, columnVal.length) == columnVal
   }
-
-
 
   // <editor-fold desc="Continent import">
 
@@ -142,9 +143,9 @@ object MockDbSpammer
 
   def importAdm1(): Unit = {
     // 1: admin1Codes
-//    val timezonesRawFile = io.Source.fromFile("C:\\Geonames\\admin1CodesASCII.txt")
-//    timezonesRawFile.getLines().filter(sourceFileLineFilter).foreach(insertBasicAdm1Line)
-//    timezonesRawFile.close()
+    val timezonesRawFile = io.Source.fromFile("C:\\Geonames\\admin1CodesASCII.txt")
+    timezonesRawFile.getLines().filter(sourceFileLineFilter).foreach(insertBasicAdm1Line)
+    timezonesRawFile.close()
 
     // 2: allCountries
     val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\allCountries.txt")
@@ -157,7 +158,6 @@ object MockDbSpammer
 
     dbSession withSession {
 
-      println("1st: " + line)
       def countryQuery = for { c <- Country if c.iso2 === line(0).split("\\.")(0) } yield c.id
       def countryId = countryQuery.first
 
@@ -167,19 +167,135 @@ object MockDbSpammer
 
   /**
    * 2nd step: inserts detailed data (e.g. location) from the allCountries file.
-   * @param line prefiltered line from the source file
+   * @param lineStr prefiltered line from the source file
    */
   private def insertDetailedAdm1Line(lineStr: String): Unit = {
-    println("2nd: " + lineStr)
     def line = lineStr.split("\t")
 
     dbSession withSession {
       def timezoneQuery = for { tz <- Timezone if tz.name === line(17).toString } yield tz.id
-      def timezoneId = timezoneQuery.first
+      def timezoneId = timezoneQuery.firstOption
 
-      // FixMe: some rows doesnt't have timezone
-      val q = for { a <- ADM1 if a.geoId === line(0).toInt } yield (a.location ~ a.population ~ a.timezoneId)
+      val q = for { a <- ADM1 if a.geoId === line(0).toInt } yield (a.location ~ a.population ~ a.timezoneId.?)
       q.update((new Point(new Coordinate(line(5).toFloat, line(4).toFloat), new PrecisionModel(), 4326), line(14).toLong, timezoneId))
+    }
+  }
+
+  // </editor-fold>
+
+  // <editor-fold desc="ADM2 import">
+
+  def importAdm2(): Unit = {
+    // 1: admin2Codes
+    val timezonesRawFile = io.Source.fromFile("C:\\Geonames\\admin2Codes.txt")
+    timezonesRawFile.getLines().filter(sourceFileLineFilter).foreach(insertBasicAdm2Line)
+    timezonesRawFile.close()
+
+    // 2: allCountries
+    val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\PL.txt")
+    allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "ADM2")).foreach(insertDetailedAdm2Line)
+    allCountriesRawFile.close()
+  }
+
+  private def insertBasicAdm2Line(lineStr: String): Unit = {
+    def line = lineStr.split("\t")
+
+    dbSession withSession {
+
+      def codes = line(0).split("\\.")
+
+      def countryQuery = for { c <- Country if c.iso2 === codes(0) } yield c.id
+      def countryId = countryQuery.first
+
+      def adm1Query = for { a <- ADM1 if a.admCode === codes(1) } yield a.id
+      def adm1Id = adm1Query.first
+
+      ADM2.forInsert.insert(line(1), line(2), None, countryId, codes(2), adm1Id, None, None, line(3).toInt)
+    }
+  }
+
+  /**
+   * 2nd step: inserts detailed data (e.g. location) from the allCountries file.
+   * @param lineStr prefiltered line from the source file
+   */
+  private def insertDetailedAdm2Line(lineStr: String): Unit = {
+    def line = lineStr.split("\t")
+
+    dbSession withSession {
+      def timezoneQuery = for { tz <- Timezone if tz.name === line(17).toString } yield tz.id
+      def timezoneId = timezoneQuery.firstOption
+
+      val q = for { a <- ADM2 if a.geoId === line(0).toInt } yield (a.location ~ a.population ~ a.timezoneId.?)
+      q.update((new Point(new Coordinate(line(5).toFloat, line(4).toFloat), new PrecisionModel(), 4326), line(14).toLong, timezoneId))
+    }
+  }
+
+  // </editor-fold>
+
+  // <editor-fold desc="ADM3 import">
+
+  def importAdm3(): Unit = {
+    val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\PL.txt")
+    allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "ADM3")).foreach(insertAdm3Line)
+    allCountriesRawFile.close()
+  }
+
+  private def insertAdm3Line(lineStr: String): Unit = {
+    def line = lineStr.split("\t")
+    println(lineStr)
+
+    dbSession withSession {
+
+      def countryQuery = for { c <- Country if c.iso2 === line(8) } yield c.id
+      def countryId = countryQuery.first
+
+      def adm1Query = for { a <- ADM1 if a.admCode === line(10) } yield a.id
+      def adm1Id = adm1Query.first
+
+      def adm2Query = for { a <- ADM2 if a.admCode === line(11) } yield a.id
+      def adm2Id = adm2Query.first
+
+      def timezoneQuery = for { tz <- Timezone if tz.name === line(17) } yield tz.id
+      def timezoneId = timezoneQuery.firstOption
+
+      ADM3.forInsert.insert(line(1), line(2), new Point(new Coordinate(line(5).toFloat, line(4).toFloat), new PrecisionModel(), 4326),
+        countryId, line(12), adm1Id, adm2Id, line(14).toLong, timezoneId, line(0).toInt)
+    }
+  }
+
+  // </editor-fold>
+
+  // <editor-fold desc="ADM4 import">
+
+  def importAdm4(): Unit = {
+    val allCountriesRawFile = io.Source.fromFile("C:\\Geonames\\PL.txt")
+    allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(7, "ADM4")).foreach(insertAdm4Line)
+    allCountriesRawFile.close()
+  }
+
+  private def insertAdm4Line(lineStr: String): Unit = {
+    def line = lineStr.split("\t")
+    println(lineStr)
+
+    dbSession withSession {
+
+      def countryQuery = for { c <- Country if c.iso2 === line(8) } yield c.id
+      def countryId = countryQuery.first
+
+      def adm1Query = for { a <- ADM1 if a.admCode === line(10) } yield a.id
+      def adm1Id = adm1Query.first
+
+      def adm2Query = for { a <- ADM2 if a.admCode === line(11) } yield a.id
+      def adm2Id = adm2Query.first
+
+      def adm3Query = for { a <- ADM3 if a.admCode === line(12) } yield a.id
+      def adm3Id = adm3Query.first
+
+      def timezoneQuery = for { tz <- Timezone if tz.name === line(17) } yield tz.id
+      def timezoneId = timezoneQuery.firstOption
+
+      ADM4.forInsert.insert(line(1), line(2), new Point(new Coordinate(line(5).toFloat, line(4).toFloat), new PrecisionModel(), 4326),
+        countryId, line(12), adm1Id, adm2Id, adm3Id, line(14).toLong, timezoneId, line(0).toInt)
     }
   }
 
@@ -190,7 +306,9 @@ object MockDbSpammer
 //    insertContinents()
 //    importCountries()
 //    importTimezones()
-    importAdm1()
-
+//    importAdm1()
+//    importAdm2()
+//    importAdm3()
+//    importAdm4()
   }
 }
