@@ -307,6 +307,16 @@ object MockDbSpammer
 
   // </editor-fold>
 
+  /**
+   * Query: list od ids of all ADM1 within given radius.
+   *
+   * @param   Int     id of requested ADM
+   * @param   Double  radius given (in meters)
+   * @return
+   */
+  def queryAdm1AllInRadiusFrom =
+    Q[(Int, Double), Int] + "SELECT id FROM adm1 WHERE ST_DISTANCE_SPHERE(location, (SELECT location FROM adm1 WHERE id = ?)) <= ?"
+
   def main(arguments: Array[String]): Unit =
   {
 //    insertContinents()
@@ -317,5 +327,31 @@ object MockDbSpammer
 //    importAdm3()
 //    importAdm4()
 
+    dbSession withSession {
+
+      /* Get all ADM1 in not further than 450km from Mazovian Viovodeship and print their names and their respective's countries. */
+      queryAdm1AllInRadiusFrom(9200, 450000.0).foreach(id => {
+        val q1 = for { a <- ADM1 if a.id === id } yield (a.name, a.countryId)
+        print(q1.first._1)
+
+        val q2 = for { c <- Country if c.id === q1.first._2.toInt } yield c.name
+        println("  " + q2.first)
+      })
+
+      //      println("42: " + byDistanceFrom(9200).first)
+      //      byDistance.list(loc, 250000.0).foreach(println)
+      //      def byDistance(point: Point) = sql"SELECT * FROM ADM1 WHERE ST_DISTANCE_SPHERE(location, $point) >= 100.0".as[ADM1]
+      //      val q2 = for { a <- ADM1 if a.countryId === 180 /*if a.location <-> loc >= 1000.0*/ } yield (a.name)
+      //      q2.foreach(println)
+      //      def byDistance(point: Geometry) = ADM1.where(_.location <-> point <= 100.0).map(t => t)
+      //      println(byDistance(loc, 1.0))
+      //      byDistance(loc).foreach(println)
+      //      val q2 = byDistance(loc, 5.0)
+      //      q2.foreach(println)
+      //      val q2 = for { a <- ADM1 if a.countryId === 180  && a.location =!= loc } yield (a.name)
+      //      val q2 = ADM1.where(r => r.location.dWithin(loc.bind, dist.bind)).map(t => t)
+      //      val q2 = bDist(loc, 2000.0)
+      //      q2.foreach(str => println("2 " + str))
+    }
   }
 }
