@@ -1,4 +1,4 @@
-package com.semantive.geoys.tables
+package com.semantive.geoys.model.entity
 
 /**
  * @author Amadeusz Kosik <akosik@semantive.com>

@@ -93,20 +93,20 @@ CREATE TABLE ADM4 (
   geo_id      INTEGER                UNIQUE                   NOT NULL
 );
 
--- -- Populated places
--- CREATE TABLE Place (
---   id         INTEGER                PRIMARY KEY,
---   name       VARCHAR(200)                                    NOT NULL,
---   ascii_name VARCHAR(200)                                    NOT NULL,
---   location   GEOMETRY(Point, 4326)                           NOT NULL,
---   country_id INTEGER                REFERENCES Country(id)   NOT NULL,
---   timezone_id INTEGER                REFERENCES Timezone(id)  NOT NULL,
---   population INTEGER                                         NOT NULL,
---   adm1_id    INTEGER                REFERENCES ADM1(id),
---   adm2_id    INTEGER                REFERENCES ADM2(id),
---   adm3_id    INTEGER                REFERENCES ADM3(id),
---   adm4_id    INTEGER                REFERENCES ADM4(id),
---   geo_id     INTEGER                UNIQUE                   NOT NULL,
---   parent_id  INTEGER                REFERENCES Place(id),
---   level      INTEGER                                         NOT NULL
--- );
+-- Populated places
+CREATE TABLE PPL (
+  id          SERIAL                 PRIMARY KEY,
+  name        VARCHAR(200)                                    NOT NULL,
+  ascii_name  VARCHAR(200)                                    NOT NULL,
+  location    GEOMETRY(Point, 4326)                           NOT NULL,
+  country_id  INTEGER                REFERENCES Country(id)   NOT NULL,
+  timezone_id INTEGER                REFERENCES Timezone(id)  NOT NULL,
+  population  INTEGER                                         NOT NULL,
+  adm1_id     INTEGER                REFERENCES ADM1(id),
+  adm2_id     INTEGER                REFERENCES ADM2(id),
+  adm3_id     INTEGER                REFERENCES ADM3(id),
+  adm4_id     INTEGER                REFERENCES ADM4(id),
+  geo_id      INTEGER                UNIQUE                   NOT NULL,
+  parent_id   INTEGER                REFERENCES PPL(id),
+  code        CHAR(5)                                         NOT NULL
+);

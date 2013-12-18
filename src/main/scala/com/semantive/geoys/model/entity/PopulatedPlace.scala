@@ -1,4 +1,4 @@
-package com.semantive.geoys.tables
+package com.semantive.geoys.model.entity
 
 import com.vividsolutions.jts.geom.Point
 
@@ -12,9 +12,9 @@ import com.vividsolutions.jts.geom.Point
  *
  * @author Amadeusz Kosik <akosik@semantive.com>
  */
-object PopulatedPlace extends FeatureTable[(Option[Int], String, String, Point, Int, Option[Int], Option[Int], Option[Int], Option[Int], Option[Int], Int, Long, Int)]("PPL") {
+object PopulatedPlace extends FeatureTable[(Option[Int], String, String, Point, Int, Option[Int], Option[Int], Option[Int], Option[Int], Option[Int], String, Long, Option[Int], Int)]("ppl") {
   /** Id of the country ADM belongs to. */
-  def countryId   = column[Int]("country_id")
+  def countryId   = column[Int]("country_id", O.PrimaryKey, O.AutoInc)
   /** Id of the parent ADM1. */
   def adm1Id      = column[Int]("adm1_id")
   /** Id of the parent ADM2. */
@@ -25,13 +25,15 @@ object PopulatedPlace extends FeatureTable[(Option[Int], String, String, Point, 
   def adm4Id      = column[Int]("adm4_id")
   /** Id of the parent PPL. */
   def parentId    = column[Int]("parent_id")
-  /** Level of the PPL. */
-  def level       = column[Int]("level")
+  /** */
+  def code        = column[String]("code", O.DBType("CHAR(5)"))
+  /** Id of the timezone. */
+  def timezoneId  = column[Int]("timezone_id")
 
   /** Default projection for SELECT * queries. */
-  def * = id.? ~ name ~ asciiName ~ location ~ countryId ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ level ~ population ~ geoId
+  def * = id.? ~ name ~ asciiName ~ location ~ countryId ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ code ~ population ~ timezoneId.? ~ geoId
   /** Projection for INSERT queries. */
-  def forInsert = name ~ asciiName ~ location ~ countryId ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ level ~ population ~ geoId
+  def forInsert = name ~ asciiName ~ location ~ countryId ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ code ~ population ~ timezoneId.? ~ geoId
 
   /** REFERENCES key on country.id. */
   def fkPplCountry = foreignKey("fk_" + tableName +  "_country", countryId, Country)(_.id)

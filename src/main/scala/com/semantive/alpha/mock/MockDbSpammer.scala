@@ -1,7 +1,8 @@
 package com.semantive.alpha.mock
 
 import com.semantive.geoys.dunno.pgSlickDriver.simple._
-import com.semantive.geoys.tables._
+import com.semantive.geoys.model.entity._
+
 import com.vividsolutions.jts.geom._
 import scala.slick.session.Database.threadLocalSession
 import scala.slick.jdbc.{StaticQuery => Q, GetResult}
@@ -32,7 +33,7 @@ object MockDbSpammer
    * @return false, if line is a comment
    */
   private def sourceFileLineFilter(line: String): Boolean = {
-    ! (line(0) == '#' || line(0) == ' ')
+    line.length > 0 && ! (line(0) == '#' || line(0) == ' ')
   }
 
   /**
@@ -55,6 +56,16 @@ object MockDbSpammer
    */
   private def sourceColumnPrefixFilter(columnNo: Int, columnVal: String): (String => Boolean) = {
     (line: String) => line.split("\t")(columnNo).length >= columnVal.length && line.split("\t")(columnNo).substring(0, columnVal.length) == columnVal
+  }
+
+  /**
+   *
+   * @param line
+   * @return
+   */
+  private def sourceHierarchyFilter(line: String): Boolean = {
+    line.split("\t").length < 3 || line.split("\t")(2) != "ADM"
+//    true
   }
 
   // <editor-fold desc="Continent import">
@@ -213,7 +224,7 @@ object MockDbSpammer
       def countryQuery = for { c <- Country if c.iso2 === codes(0) } yield c.id
       def countryId = countryQuery.first
 
-      def adm1Query = for { a <- ADM1 if a.admCode === codes(1) } yield a.id
+      def adm1Query = for { a <- ADM1 if a.admCode === codes(1) && a.countryId === countryId } yield a.id
       def adm1Id = adm1Query.first
 
       ADM2.forInsert.insert(line(1), line(2), None, countryId, codes(2), adm1Id, None, None, line(3).toInt)
@@ -255,7 +266,7 @@ object MockDbSpammer
       def countryQuery = for { c <- Country if c.iso2 === line(8) } yield c.id
       def countryId = countryQuery.first
 
-      def adm1Query = for { a <- ADM1 if a.admCode === line(10) } yield a.id
+      def adm1Query = for { a <- ADM1 if a.admCode === line(10) && a.countryId === countryId } yield a.id
       def adm1Id = adm1Query.first
 
       def adm2Query = for { a <- ADM2 if a.admCode === line(11) } yield a.id
@@ -281,14 +292,13 @@ object MockDbSpammer
 
   private def insertAdm4Line(lineStr: String): Unit = {
     def line = lineStr.split("\t")
-    println(lineStr)
 
     dbSession withSession {
 
       def countryQuery = for { c <- Country if c.iso2 === line(8) } yield c.id
       def countryId = countryQuery.first
 
-      def adm1Query = for { a <- ADM1 if a.admCode === line(10) } yield a.id
+      def adm1Query = for { a <- ADM1 if a.admCode === line(10) && a.countryId === countryId } yield a.id
       def adm1Id = adm1Query.first
 
       def adm2Query = for { a <- ADM2 if a.admCode === line(11) } yield a.id
@@ -307,51 +317,72 @@ object MockDbSpammer
 
   // </editor-fold>
 
-  /**
-   * Query: list od ids of all ADM1 within given radius.
-   *
-   * @param   Int     id of requested ADM
-   * @param   Double  radius given (in meters)
-   * @return
-   */
-  def queryAdm1AllInRadiusFrom =
-    Q[(Int, Double), Int] + "SELECT id FROM adm1 WHERE ST_DISTANCE_SPHERE(location, (SELECT location FROM adm1 WHERE id = ?)) <= ?"
+  // <editor-fold desc="PPL import">
 
-  def main(arguments: Array[String]): Unit =
-  {
-//    insertContinents()
-//    importCountries()
-//    importTimezones()
-//    importAdm1()
-//    importAdm2()
-//    importAdm3()
-//    importAdm4()
+  def importPpl(): Unit = {
+//    val allCountriesRawFile = io.Source.fromFile(dumpDirectory + "PL.txt")
+//    allCountriesRawFile.getLines().filter(sourceAllCountriesLineFilter).filter(sourceColumnPrefixFilter(6, "P")).foreach(insertPplLine)
+//    allCountriesRawFile.close()
+
+    val hierarchyRawFile = io.Source.fromFile(dumpDirectory + "hierarchy.txt")
+    hierarchyRawFile.getLines().filter(sourceFileLineFilter).filter(sourceHierarchyFilter).foreach(insertPplHierarchyLine)
+    hierarchyRawFile.close()
+  }
+
+  private def insertPplLine(lineStr: String): Unit = {
+    def line = lineStr.split("\t")
+    println(lineStr)
 
     dbSession withSession {
 
-      /* Get all ADM1 in not further than 450km from Mazovian Viovodeship and print their names and their respective's countries. */
-      queryAdm1AllInRadiusFrom(9200, 450000.0).foreach(id => {
-        val q1 = for { a <- ADM1 if a.id === id } yield (a.name, a.countryId)
-        print(q1.first._1)
+      def countryQuery = for { c <- Country if c.iso2 === line(8) } yield c.id
+      def countryId = countryQuery.first
 
-        val q2 = for { c <- Country if c.id === q1.first._2.toInt } yield c.name
-        println("  " + q2.first)
-      })
+      def adm1Query = for { a <- ADM1 if a.admCode === line(10) && a.countryId === countryId } yield a.id
+      def adm1Id = adm1Query.firstOption
 
-      //      println("42: " + byDistanceFrom(9200).first)
-      //      byDistance.list(loc, 250000.0).foreach(println)
-      //      def byDistance(point: Point) = sql"SELECT * FROM ADM1 WHERE ST_DISTANCE_SPHERE(location, $point) >= 100.0".as[ADM1]
-      //      val q2 = for { a <- ADM1 if a.countryId === 180 /*if a.location <-> loc >= 1000.0*/ } yield (a.name)
-      //      q2.foreach(println)
-      //      def byDistance(point: Geometry) = ADM1.where(_.location <-> point <= 100.0).map(t => t)
-      //      println(byDistance(loc, 1.0))
-      //      byDistance(loc).foreach(println)
-      //      val q2 = byDistance(loc, 5.0)
-      //      q2.foreach(println)
-      //      val q2 = for { a <- ADM1 if a.countryId === 180  && a.location =!= loc } yield (a.name)
-      //      val q2 = ADM1.where(r => r.location.dWithin(loc.bind, dist.bind)).map(t => t)
-      //      val q2 = bDist(loc, 2000.0)
-      //      q2.foreach(str => println("2 " + str))
+      def adm2Query = for { a <- ADM2 if a.admCode === line(11) } yield a.id
+      def adm2Id = adm2Query.firstOption
+
+      def adm3Query = for { a <- ADM3 if a.admCode === line(12) } yield a.id
+      def adm3Id = adm3Query.firstOption
+
+      def adm4Query = for { a <- ADM3 if a.admCode === line(13) } yield a.id
+      def adm4Id = adm4Query.firstOption
+
+      def timezoneQuery = for { tz <- Timezone if tz.name === line(17) } yield tz.id
+      def timezoneId = timezoneQuery.firstOption
+
+      PopulatedPlace.forInsert.insert(line(1), line(2), new Point(new Coordinate(line(5).toFloat, line(4).toFloat), new PrecisionModel(), 4326),
+        countryId, adm1Id, adm2Id, adm3Id, adm4Id, None, line(7), line(14).toLong, timezoneId, line(0).toInt)
     }
+  }
+
+  private def insertPplHierarchyLine(lineStr: String): Unit = {
+    def line = lineStr.split("\t")
+    println(lineStr)
+
+    dbSession withSession {
+      def pplQuery = for { p <- PopulatedPlace if p.geoId === line(1).toInt } yield p.parentId.?
+
+      if(pplQuery.firstOption != None) {
+        def parentQuery = for { p <- PopulatedPlace if p.geoId === line(0).toInt } yield p.id
+        pplQuery.update(parentQuery.firstOption)
+      }
+    }
+  }
+
+  // </editor-fold>
+
+  def main(arguments: Array[String]): Unit =
+  {
+    insertContinents()
+    importCountries()
+    importTimezones()
+    importAdm1()
+    importAdm2()
+    importAdm3()
+    importAdm4()
+    importPpl()
   }
 }

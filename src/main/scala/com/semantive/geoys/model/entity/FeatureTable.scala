@@ -1,4 +1,4 @@
-package com.semantive.geoys.tables
+package com.semantive.geoys.model.entity
 
 import com.semantive.geoys.dunno.pgSlickDriver.simple._
 import com.vividsolutions.jts.geom.Point

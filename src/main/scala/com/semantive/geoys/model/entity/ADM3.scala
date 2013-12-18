@@ -1,4 +1,4 @@
-package com.semantive.geoys.tables
+package com.semantive.geoys.model.entity
 
 import com.vividsolutions.jts.geom.Point
 
