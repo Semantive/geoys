@@ -5,7 +5,8 @@ import utils.pgSlickDriver.simple._
 
 case class Timezone(id: Option[Long], countryId: Long, name: String, gmtOffset: Double, dstOffset: Double, rawOffset: Double)
 
-trait TimezoneComponent {
+trait TimezoneComponent { self: CountryComponent =>
+  val Countries: Countries
 
   class Timezones extends Table[Timezone]("timezone") {
     /** */
@@ -21,6 +22,9 @@ trait TimezoneComponent {
     /** */
     def rawOffset   = column[Double]("raw_offset", O.DBType("NUMERIC(3, 1)"))
 
+    /** REFERENCES key on country.id. */
+    def fkContinent = foreignKey("fk_timezone_country", countryId, Countries)(_.id)
+
     /** */
     def * = id.? ~ countryId ~ name ~ gmtOffset ~ dstOffset ~ rawOffset <> (Timezone.apply _, Timezone.unapply _)
     /** */
@@ -28,9 +32,7 @@ trait TimezoneComponent {
   }
 }
 
-object Timezones extends TimezoneComponent {
-
-  val Timezones = new Timezones
+object Timezones extends DAO {
 
   def insert(timezone: Timezone)(implicit session: Session) {
     Timezones.autoInc.insert(timezone)

@@ -19,6 +19,9 @@ trait ContinentComponent {
     /** Id of the continent in the Geonames db. */
     def geoId       = column[Long]("geo_id")
 
+    /** UNIQUE index on geoId. */
+    def idxGeoId    = index("uq_continent_geo_id", geoId, unique = true)
+
     /** Default projection.. */
     def * = id.? ~ name ~ asciiName ~ code ~ geoId <> (Continent.apply _, Continent.unapply _)
     /** */
@@ -26,9 +29,7 @@ trait ContinentComponent {
   }
 }
 
-object Continents extends ContinentComponent {
-
-  val Continents = new Continents
+object Continents extends DAO {
 
   def insert(continent: Continent)(implicit session: Session) {
     Continents.autoInc.insert(continent)
