@@ -1,4 +1,4 @@
-package models
+  package models
 
 import play.api.Play.current
 import utils.pgSlickDriver.simple._
@@ -6,7 +6,7 @@ import utils.pgSlickDriver.simple._
 case class Timezone(id: Option[Long], countryId: Long, name: String, gmtOffset: Double, dstOffset: Double, rawOffset: Double)
 
 trait TimezoneComponent { self: CountryComponent =>
-  val Countries: Countries
+  val Timezones: Timezones
 
   class Timezones extends Table[Timezone]("timezone") {
     /** */
@@ -24,6 +24,8 @@ trait TimezoneComponent { self: CountryComponent =>
 
     /** REFERENCES key on country.id. */
     def fkContinent = foreignKey("fk_timezone_country", countryId, Countries)(_.id)
+    /** UNIQUE index on name. */
+    def idxName     = index("uq_timezone_name", name, unique = true)
 
     /** */
     def * = id.? ~ countryId ~ name ~ gmtOffset ~ dstOffset ~ rawOffset <> (Timezone.apply _, Timezone.unapply _)
@@ -36,5 +38,10 @@ object Timezones extends DAO {
 
   def insert(timezone: Timezone)(implicit session: Session) {
     Timezones.autoInc.insert(timezone)
+  }
+
+  def getAll()(implicit session: Session): Seq[Timezone] = {
+    val query = for { tz <- Timezones } yield tz
+    query.list
   }
 }
