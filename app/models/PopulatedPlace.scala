@@ -2,10 +2,7 @@ package models
 
 import com.vividsolutions.jts.geom.Point
 
-/**
- * This class should be probably folded in the same way as ADM classes
- */
-@deprecated
+@deprecated("This class should be probably folded in the same way as ADM classes", "1.0.0-SNAPSHOT")
 case class PopulatedPlace(id: Option[Long],
                           name: String,
                           asciiName: String,
