@@ -18,7 +18,7 @@ case class GeoFeature(id: Option[Long],
                       adm3Id: Option[Long] = None,
                       adm4Id: Option[Long] = None,
                       parentId: Option[Long] = None,
-                      level: Int = 1) extends AbstractEntity
+                      level: Option[Int]) extends AbstractEntity
 
 
 

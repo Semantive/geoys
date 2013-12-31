@@ -88,5 +88,5 @@ object GeoFeatures extends Table[GeoFeature]("feature") with DAO[GeoFeature] {
   def idxGeoId = index("uq_featuure_geo_id", (geoId, level), unique = true)
 
   /** Default projection.. */
-  def * = id.? ~ name ~ asciiName ~ fClass ~ fCode ~ admCode.? ~ timezoneId.? ~ location.? ~ countryId ~ population.? ~ geoId ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ level <>(GeoFeature.apply _, GeoFeature.unapply _)
+  def * = id.? ~ name ~ asciiName ~ fClass ~ fCode ~ admCode.? ~ timezoneId.? ~ location.? ~ countryId ~ population.? ~ geoId ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ level.? <>(GeoFeature.apply _, GeoFeature.unapply _)
 }
