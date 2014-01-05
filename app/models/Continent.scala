@@ -3,7 +3,7 @@ package models
 /**
  * Continent representation.
  *
- * @author Amadeusz Kosik <>
+ * @author Amadeusz Kosik <akosik@semantive.com>
  *
  * @param geonameId   id of the continet in the Geonames' dump.
  * @param code        two-letter code of the continent.

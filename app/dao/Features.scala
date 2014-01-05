@@ -27,7 +27,7 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   def timezoneId    = column[Int]("timezone_id", O.Nullable)
   def location      = column[Point]("location", O.Nullable)
   def population    = column[Long]("population", O.Nullable)
-  def wikiLink      = column[String]("wiki_link")
+  def wikiLink      = column[String]("wiki_link", O.Nullable)
 
   // </editor-fold>
 

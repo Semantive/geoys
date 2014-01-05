@@ -13,7 +13,7 @@ object Continents extends Table[Continent]("continent") with DAO[Continent] {
 
   // <editor-fold desc="Row definitions">
 
-  def geonameId = column[Long]("geoname_id", O.PrimaryKey)
+  def geonameId = column[Int]("geoname_id", O.PrimaryKey)
   def code = column[String]("code", O.DBType("CHAR(2)"))
 
   // </editor-fold>
@@ -21,7 +21,7 @@ object Continents extends Table[Continent]("continent") with DAO[Continent] {
   // <editor-fold desc="Projections">
 
   /** Default projection.. */
-  def * = geoId ~ code <>(Continent.apply _, Continent.unapply _)
+  def * = geonameId ~ code <>(Continent.apply _, Continent.unapply _)
 
   // </editor-fold>
 }
