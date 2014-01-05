@@ -13,8 +13,8 @@ package models
  * @param rawOffset   raw offset.
  */
 case class Timezone(
-  id: Option[Long],
-  countryId: Long,
+  id: Option[Int],
+  countryId: Int,
   name: String,
   gmtOffset: Double,
   dstOffset: Double,

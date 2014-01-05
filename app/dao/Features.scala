@@ -27,7 +27,7 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   def timezoneId    = column[Int]("timezone_id", O.Nullable)
   def location      = column[Point]("location", O.Nullable)
   def population    = column[Long]("population", O.Nullable)
-
+  def wikiLink      = column[String]("wiki_link")
 
   // </editor-fold>
 
@@ -59,7 +59,7 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   // <editor-fold desc="Projections">
 
   /** Default projection. */
-  def * = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ location.? ~ population.? <> (Feature.apply _, Feature.unapply _)
+  def * = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ location.? ~ population.? ~ wikiLink.? <> (Feature.apply _, Feature.unapply _)
 
   // </editor-fold>
 }
