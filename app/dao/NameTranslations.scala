@@ -19,7 +19,8 @@ object NameTranslations extends Table[NameTranslation]("name_translation") with 
 
   // <editor-fold desc="Primary key">
 
-  def primaryKey    = primaryKey("pk_translation", geonameId ~ language)
+  // ToDo: change this to primaryKey
+  def primaryKey    = index("pk_translation", (geonameId, language), unique = true)
 
   // </editor-fold>
 
