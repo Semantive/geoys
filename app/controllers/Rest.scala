@@ -5,14 +5,19 @@ import play.api.db.slick._
 import play.api.Play.current
 import play.api.libs.json._
 import models._
-import dao.Countries
+import dao._
 
+/**
+ *
+ */
 object Rest extends Controller {
 
-  /* FixMe: find a better place for this function. */
-  private def countryToJson(data: (Country, NameTranslation)): JsObject = {
+  // <editor-fold desc="JSON generators">
+
+  private def countryInfoToJson(data: (Country, NameTranslation, Feature)): JsObject = {
     def country = data._1
     def names   = data._2
+    def feature = data._3
 
     Json.obj(
       "name"          -> names.name,
@@ -23,10 +28,20 @@ object Rest extends Controller {
       "fips_code"     -> country.fipsCode,
       "population"    -> country.population,
       "tld"           -> country.topLevelDomain,
-      "currency_code" -> country.currencyCode
+      "currency_code" -> country.currencyCode,
+      "wiki_link"     -> feature.wikiLink
     )
   }
 
+  // </editor-fold>
+
+  /**
+   * Country Info service.
+   *
+   * @param geonameId geoname id of the country
+   * @param lang      language of the result
+   * @return          JSON
+   */
   def countryInfo(geonameId: Int, lang: String) = DBAction { implicit rs =>
 
     val country = Countries.getWithName(geonameId, lang)
@@ -34,7 +49,7 @@ object Rest extends Controller {
     if(country.isEmpty)
         NotFound
     else
-        Ok(countryToJson(country.get))
+        Ok(countryInfoToJson(country.get))
   }
 
 }

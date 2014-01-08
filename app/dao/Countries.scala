@@ -1,8 +1,7 @@
 package dao
 
 import utils.pgSlickDriver.simple._
-import models.Country
-import models.NameTranslation
+import models._
 
 object Countries extends Table[Country]("country") with DAO[Country] {
 
@@ -50,12 +49,17 @@ object Countries extends Table[Country]("country") with DAO[Country] {
 
   // </editor-fold>
 
-  def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, NameTranslation)] = {
+  def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, NameTranslation, Feature)] = {
     (for {
       c <- Query(Countries)
       n <- Query(NameTranslations)
+      f <- Query(Features)
 
-      if c.geonameId === geonameId && c.geonameId === n.geonameId && n.language === lang
-    } yield (c, n)).firstOption
+      if c.geonameId === geonameId &&
+         f.geonameId === c.geonameId &&
+         c.geonameId === n.geonameId &&
+         n.language === lang &&
+         n.isOfficial === true
+    } yield (c, n, f)).firstOption
   }
 }
