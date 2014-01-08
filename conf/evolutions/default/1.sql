@@ -45,7 +45,8 @@ CREATE TABLE name_translation (
   id            SERIAL                PRIMARY KEY,
   geoname_id    INTEGER               REFERENCES feature(geoname_id)    NOT NULL,
   language      CHAR(8)               NOT NULL,
-  name          VARCHAR(255)          NOT NULL
+  name          VARCHAR(255)          NOT NULL,
+  is_official   BOOLEAN               NOT NULL
 );
 
 -- todo: partycje

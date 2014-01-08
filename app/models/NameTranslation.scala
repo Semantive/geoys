@@ -10,8 +10,9 @@ package models
  * @param name      translated name of the feature.
  */
 case class NameTranslation (
-  id:         Option[Int],
-  geonameId:  Int,
-  language:   String,
-  name:       String
+  id:           Option[Int],
+  geonameId:    Int,
+  language:     String,
+  name:         String,
+  isOfficial:   Boolean
 ) extends AbstractEntity

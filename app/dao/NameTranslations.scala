@@ -4,7 +4,6 @@ import utils.pgSlickDriver.simple._
 import models.NameTranslation
 
 /**
- *
  * @author Amadeusz Kosik <akosik@semantive.com>
  */
 object NameTranslations extends Table[NameTranslation]("name_translation") with DAO[NameTranslation] {
@@ -15,6 +14,7 @@ object NameTranslations extends Table[NameTranslation]("name_translation") with 
   def geonameId     = column[Int]("geoname_id")
   def language      = column[String]("language", O.DBType("CHAR(8)"))
   def name          = column[String]("name")
+  def isOfficial    = column[Boolean]("is_official")
 
   // </editor-fold>
 
