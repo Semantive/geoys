@@ -2,6 +2,7 @@ package dao
 
 import utils.pgSlickDriver.simple._
 import models.Country
+import models.NameTranslation
 
 object Countries extends Table[Country]("country") with DAO[Country] {
 
@@ -14,7 +15,7 @@ object Countries extends Table[Country]("country") with DAO[Country] {
   def fipsCode        = column[String]("fips_code", O.DBType("CHAR(2)"), O.Nullable)
   def population      = column[Long]("population")
   def continentId     = column[Int]("continent_id")
-  def topLevelDomain  = column[String]("tld", O.DBType("CHAR(8)"))
+  def topLevelDomain  = column[String]("tld", O.DBType("VARCHAR(8)"))
   def currencyCode    = column[String]("currency_code", O.DBType("CHAR(3)"))
 
   // </editor-fold>
@@ -48,4 +49,13 @@ object Countries extends Table[Country]("country") with DAO[Country] {
   def * = geonameId ~ iso2Code ~ iso3Code ~ isoNumeric ~ fipsCode.? ~ population ~ continentId ~ topLevelDomain ~ currencyCode <>(Country.apply _, Country.unapply _)
 
   // </editor-fold>
+
+  def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, NameTranslation)] = {
+    (for {
+      c <- Query(Countries)
+      n <- Query(NameTranslations)
+
+      if c.geonameId === geonameId && c.geonameId === n.geonameId && n.language === lang
+    } yield (c, n)).firstOption
+  }
 }

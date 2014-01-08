@@ -12,7 +12,7 @@ CREATE TABLE country (
   fips_code     CHAR(2)               UNIQUE                            NOT NULL,
   population    INTEGER                                                 NOT NULL,
   continent_id  INTEGER               REFERENCES continent(geoname_id)  NOT NULL,
-  tld           CHAR(8)                                                 NOT NULL,
+  tld           VARCHAR(8)                                              NOT NULL,
   currency_code CHAR(3)                                                 NOT NULL
 );
 
@@ -42,11 +42,10 @@ CREATE TABLE feature (
 );
 
 CREATE TABLE name_translation (
+  id            SERIAL                PRIMARY KEY,
   geoname_id    INTEGER               REFERENCES feature(geoname_id)    NOT NULL,
   language      CHAR(8)               NOT NULL,
-  name          VARCHAR(255)          NOT NULL,
-
-  PRIMARY KEY(geoname_id, language)
+  name          VARCHAR(255)          NOT NULL
 );
 
 -- todo: partycje

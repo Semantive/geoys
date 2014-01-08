@@ -11,16 +11,10 @@ object NameTranslations extends Table[NameTranslation]("name_translation") with 
 
   // <editor-fold desc="Row definitions">
 
+  def id            = column[Int]("id", O.PrimaryKey, O.AutoInc)
   def geonameId     = column[Int]("geoname_id")
   def language      = column[String]("language", O.DBType("CHAR(8)"))
   def name          = column[String]("name")
-
-  // </editor-fold>
-
-  // <editor-fold desc="Primary key">
-
-  // ToDo: change this to primaryKey
-  def primaryKey    = index("pk_translation", (geonameId, language), unique = true)
 
   // </editor-fold>
 
@@ -34,7 +28,7 @@ object NameTranslations extends Table[NameTranslation]("name_translation") with 
   // <editor-fold desc="Projections">
 
   /** Default projection. */
-  def * = geonameId ~ language ~ name <> (NameTranslation.apply _, NameTranslation.unapply _)
+  def * = id.? ~ geonameId ~ language ~ name <> (NameTranslation.apply _, NameTranslation.unapply _)
 
   // </editor-fold>
 
