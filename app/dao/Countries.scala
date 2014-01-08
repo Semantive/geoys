@@ -8,10 +8,10 @@ object Countries extends Table[Country]("country") with DAO[Country] {
   // <editor-fold desc="Row definitions">
 
   def geonameId       = column[Int]("geoname_id", O.PrimaryKey)
-  def iso2Code        = column[String]("iso_2_code", O.DBType("CHAR(2)"))
-  def iso3Code        = column[String]("iso_3_code", O.DBType("CHAR(3)"))
+  def iso2Code        = column[String]("iso2_code", O.DBType("CHAR(2)"))
+  def iso3Code        = column[String]("iso3_code", O.DBType("CHAR(3)"))
   def isoNumeric      = column[String]("iso_numeric", O.DBType("CHAR(3)"))
-  def fipsCode        = column[String]("fips_code", O.DBType("CHAR(2)"))
+  def fipsCode        = column[String]("fips_code", O.DBType("CHAR(2)"), O.Nullable)
   def population      = column[Long]("population")
   def continentId     = column[Int]("continent_id")
   def topLevelDomain  = column[String]("tld", O.DBType("CHAR(8)"))
@@ -45,7 +45,7 @@ object Countries extends Table[Country]("country") with DAO[Country] {
   // <editor-fold desc="Projections">
 
   /** Default projection.. */
-  def * = geonameId ~ iso2Code ~ iso3Code ~ isoNumeric ~ fipsCode ~ population ~ continentId ~ topLevelDomain ~ currencyCode <>(Country.apply _, Country.unapply _)
+  def * = geonameId ~ iso2Code ~ iso3Code ~ isoNumeric ~ fipsCode.? ~ population ~ continentId ~ topLevelDomain ~ currencyCode <>(Country.apply _, Country.unapply _)
 
   // </editor-fold>
 }

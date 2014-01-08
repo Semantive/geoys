@@ -19,7 +19,7 @@ case class Country(
   iso2Code:         String,
   iso3Code:         String,
   isoNumeric:       String,
-  fipsCode:         String,
+  fipsCode:         Option[String],
   population:       Long,
   continentId:      Int,
   topLevelDomain:   String,
