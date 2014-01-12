@@ -3,37 +3,24 @@ package controllers
 import play.api.mvc._
 import play.api.db.slick._
 import play.api.Play.current
-import play.api.libs.json._
-import models._
+
 import dao._
+import utils.JsonTemplates
 
 /**
  *
  */
 object Rest extends Controller {
 
-  // <editor-fold desc="JSON generators">
+  def children(geonameId: Int, lang: String) = DBAction { implicit rs =>
 
-  private def countryInfoToJson(data: (Country, NameTranslation, Feature)): JsObject = {
-    def country = data._1
-    def names   = data._2
-    def feature = data._3
+    val features = Features.getChildren(geonameId, lang)
 
-    Json.obj(
-      "name"          -> names.name,
-      "geoname_id"    -> country.geonameId,
-      "iso2_code"     -> country.iso2Code,
-      "iso3_code"     -> country.iso3Code,
-      "iso_numeric"   -> country.isoNumeric,
-      "fips_code"     -> country.fipsCode,
-      "population"    -> country.population,
-      "tld"           -> country.topLevelDomain,
-      "currency_code" -> country.currencyCode,
-      "wiki_link"     -> feature.wikiLink
-    )
+    if(features.length == 0)
+      NotFound
+    else
+      Ok(JsonTemplates.childrenToJson(features))
   }
-
-  // </editor-fold>
 
   /**
    * Country Info service.
@@ -42,14 +29,50 @@ object Rest extends Controller {
    * @param lang      language of the result
    * @return          JSON
    */
-  def countryInfo(geonameId: Int, lang: String) = DBAction { implicit rs =>
+  def countryInfoByGeoId(geonameId: Int, lang: String) = DBAction { implicit rs =>
 
-    val country = Countries.getWithName(geonameId, lang)
+    val country = Countries.getByGeoIdWithName(geonameId, lang)
 
     if(country.isEmpty)
         NotFound
     else
-        Ok(countryInfoToJson(country.get))
+        Ok(JsonTemplates.countryInfoToJson(country.get))
   }
 
+  /**
+   * Country Info service.
+   *
+   * @param iso2Code  ISO 2-alpha code of the country
+   * @param lang      language of the result
+   * @return          JSON
+   */
+  def countryInfoByIso(iso2Code: String, lang: String) = DBAction { implicit rs =>
+
+    val country = Countries.getByIsoWithName(iso2Code, lang)
+
+    if(country.isEmpty)
+      NotFound
+    else
+      Ok(JsonTemplates.countryInfoToJson(country.get))
+  }
+
+  def featureInfo(geonameId: Int, lang: String) = DBAction { implicit rs =>
+
+    val feature = Features.getByGeoIdWithName(geonameId, lang)
+
+    if(feature.isEmpty)
+      NotFound
+    else
+      Ok(JsonTemplates.featureInfoToJson(feature.get))
+  }
+
+  def siblings(geonameId: Int, lang: String) = DBAction { implicit rs =>
+
+    val features = Features.getSiblings(geonameId, lang)
+
+    if(features.length == 0)
+      NotFound
+    else
+      Ok(JsonTemplates.siblingsToJson(features))
+  }
 }

@@ -49,7 +49,7 @@ object Countries extends Table[Country]("country") with DAO[Country] {
 
   // </editor-fold>
 
-  def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, NameTranslation, Feature)] = {
+  def getByGeoIdWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, NameTranslation, Feature)] = {
     (for {
       c <- Query(Countries)
       n <- Query(NameTranslations)
@@ -60,6 +60,20 @@ object Countries extends Table[Country]("country") with DAO[Country] {
          c.geonameId === n.geonameId &&
          n.language === lang &&
          n.isOfficial === true
+    } yield (c, n, f)).firstOption
+  }
+
+  def getByIsoWithName(iso2Code: String, lang: String)(implicit session: Session): Option[(Country, NameTranslation, Feature)] = {
+    (for {
+      c <- Query(Countries)
+      n <- Query(NameTranslations)
+      f <- Query(Features)
+
+      if c.iso2Code === iso2Code &&
+        f.geonameId === c.geonameId &&
+        c.geonameId === n.geonameId &&
+        n.language === lang &&
+        n.isOfficial === true
     } yield (c, n, f)).firstOption
   }
 }

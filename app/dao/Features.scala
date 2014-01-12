@@ -2,7 +2,7 @@ package dao
 
 import com.vividsolutions.jts.geom.Point
 import utils.pgSlickDriver.simple._
-import models.Feature
+import models.{NameTranslation, Feature}
 
 /**
  * Feature table definition.
@@ -62,4 +62,42 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   def * = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ location.? ~ population.? ~ wikiLink.? <> (Feature.apply _, Feature.unapply _)
 
   // </editor-fold>
+
+  def getByGeoIdWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Feature, NameTranslation)] = {
+    (for {
+      f <- Query(Features)
+      n <- Query(NameTranslations)
+
+      if f.geonameId === geonameId &&
+        f.geonameId === n.geonameId &&
+        n.language === lang &&
+        n.isOfficial === true
+    } yield (f, n)).firstOption
+  }
+
+  def getChildren(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, NameTranslation)] = {
+    (for {
+      f <- Query(Features)
+      n <- Query(NameTranslations)
+
+      if f.parentId === geonameId &&
+        f.geonameId === n.geonameId &&
+        n.language === lang &&
+        n.isOfficial === true
+    } yield (f, n)).list
+  }
+
+  def getSiblings(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, NameTranslation)] = {
+    (for {
+      f <- Query(Features)
+      n <- Query(NameTranslations)
+      p <- Query(Features)
+
+      if p.geonameId === geonameId &&
+        f.parentId === f.parentId &&
+        f.geonameId === n.geonameId &&
+        n.language === lang &&
+        n.isOfficial === true
+    } yield (f, n)).list
+  }
 }
