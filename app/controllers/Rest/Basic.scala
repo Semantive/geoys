@@ -1,4 +1,4 @@
-package controllers
+package controllers.Rest
 
 import play.api.mvc._
 import play.api.db.slick._
@@ -8,25 +8,18 @@ import dao._
 import utils.JsonTemplates
 
 /**
+ * REST service controller for basic services (i.e. services which requests Geoname ID and returns detailed data).
  *
+ * @author Amadeusz Kosik <akosik@semantive.com>
  */
-object Rest extends Controller {
-
-  def children(geonameId: Int, lang: String) = DBAction { implicit rs =>
-
-    val features = Features.getChildren(geonameId, lang)
-
-    if(features.length == 0)
-      NotFound
-    else
-      Ok(JsonTemplates.childrenToJson(features))
-  }
+object Basic extends Controller {
 
   /**
-   * Country Info service.
+   * CountryInfo service.
+   *  Returns detailed information about given country.
    *
-   * @param geonameId geoname id of the country
-   * @param lang      language of the result
+   * @param geonameId Geoname ID of the country
+   * @param lang      preferred language of the result
    * @return          JSON
    */
   def countryInfoByGeoId(geonameId: Int, lang: String) = DBAction { implicit rs =>
@@ -34,13 +27,14 @@ object Rest extends Controller {
     val country = Countries.getByGeoIdWithName(geonameId, lang)
 
     if(country.isEmpty)
-        NotFound
+      NotFound
     else
-        Ok(JsonTemplates.countryInfoToJson(country.get))
+      Ok(JsonTemplates.countryInfoToJson(country.get))
   }
 
   /**
-   * Country Info service.
+   * CountryInfo service.
+   *  Returns detailed information about given country.
    *
    * @param iso2Code  ISO 2-alpha code of the country
    * @param lang      language of the result
@@ -56,6 +50,14 @@ object Rest extends Controller {
       Ok(JsonTemplates.countryInfoToJson(country.get))
   }
 
+  /**
+   * FeatureInfo service.
+   *  Returns detailed information about given feature.
+   *
+   * @param geonameId Geoname ID of the feature
+   * @param lang      preferred language of the result
+   * @return          JSON
+   */
   def featureInfo(geonameId: Int, lang: String) = DBAction { implicit rs =>
 
     val feature = Features.getByGeoIdWithName(geonameId, lang)
@@ -64,15 +66,5 @@ object Rest extends Controller {
       NotFound
     else
       Ok(JsonTemplates.featureInfoToJson(feature.get))
-  }
-
-  def siblings(geonameId: Int, lang: String) = DBAction { implicit rs =>
-
-    val features = Features.getSiblings(geonameId, lang)
-
-    if(features.length == 0)
-      NotFound
-    else
-      Ok(JsonTemplates.siblingsToJson(features))
   }
 }
