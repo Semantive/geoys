@@ -2,6 +2,8 @@ package dao
 
 import com.vividsolutions.jts.geom.Point
 import utils.pgSlickDriver.simple._
+import scala.slick.jdbc.{GetResult, StaticQuery => Q}
+
 import models.{NameTranslation, Feature}
 
 /**
@@ -85,6 +87,41 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
         n.language === lang &&
         n.isOfficial === true
     } yield (f, n)).list
+  }
+
+  /**
+   * Returns hierarchy of the feature - the feature itself and all of it's parents.
+   *
+   * @todo return (Feature, NameTranslation) tuple instead of geonameId only. Problems:
+   *        # creating Feature case class requires 14 of r.<< - find a better solution
+   *        # no implicit conversion from PostGIS Point (DB) to JTS Point (case class)
+   *
+   * @param geonameId id of the feature to search for
+   * @param lang      preferred language of the names in the output
+   * @return          list of parent features, including given feature
+   */
+  def getHierarchy(geonameId: Int, lang: String)(implicit session: Session): List[(Int)] = {
+
+    val query = Q.query[(Int), (Int)]("""
+    WITH RECURSIVE
+      parent_feature(geoname_id, parent_id, depth, path) AS (
+          SELECT
+            f.geoname_id, f.parent_id, 1::INT AS depth, ARRAY[f.geoname_id] AS path
+          FROM
+            feature AS f
+          WHERE
+            f.parent_id IS NULL
+         UNION ALL
+          SELECT
+            f.geoname_id, f.parent_id, pf.depth + 1 AS depth, path || ARRAY[f.geoname_id]
+          FROM
+            parent_feature AS pf, feature AS f
+          WHERE
+            f.parent_id = pf.geoname_id
+      )
+    SELECT geoname_id FROM feature WHERE geoname_id = ANY((SELECT path FROM parent_feature AS f WHERE f.geoname_id = ?)::integer[])
+                                                   """)
+    query.list(geonameId)
   }
 
   def getSiblings(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, NameTranslation)] = {

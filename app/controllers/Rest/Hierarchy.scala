@@ -40,7 +40,15 @@ object Hierarchy extends Controller {
    * @param lang      preferred lang of names of the returned features
    * @return          JSON
    */
-  def hierarchy(geonameId: Int, lang: String) = TODO
+  def hierarchy(geonameId: Int, lang: String) = DBAction { implicit rs =>
+
+    val features = Features.getHierarchy(geonameId, lang)
+
+    if(features.length == 0)
+      NotFound
+    else
+      Ok(JsonTemplates.hierarchyToJson(features))
+  }
 
   /**
    * Siblings service.

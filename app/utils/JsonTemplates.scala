@@ -77,8 +77,8 @@ object JsonTemplates {
   /**
    * Projection of Children REST service.
    *
-   * @param data data of the requested country from the model
-   * @return     JSON response object.
+   * @param data list of features received from the model
+   * @return     JSON response object
    */
   def childrenToJson(data: List[(Feature, NameTranslation)]): JsObject = {
     Json.obj(
@@ -87,10 +87,24 @@ object JsonTemplates {
   }
 
   /**
+   * Projection of Hierarchy REST service.
+   *
+   * @todo update so it can show all data of the retrieved features (@see dao.Features).
+   *
+   * @param data  list of features received from the model
+   * @return      JSON response object
+   */
+  def hierarchyToJson(data: List[(Int)]): JsObject = {
+    Json.obj(
+      "hierarchy" -> data.map {child => Json.obj("geoname_id" -> child)}
+    )
+  }
+
+  /**
    * Projection of Siblings REST service.
    *
-   * @param data data of the requested country from the model
-   * @return     JSON response object.
+   * @param data list of features received from the model
+   * @return     JSON response object
    */
   def siblingsToJson(data: List[(Feature, NameTranslation)]): JsObject = {
     Json.obj(
