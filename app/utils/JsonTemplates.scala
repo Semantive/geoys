@@ -30,13 +30,15 @@ object JsonTemplates {
    * @param data data of the requested country from the model
    * @return     JSON response object
    */
-  def countryInfoToJson(data: (Country, NameTranslation, Feature)): JsObject = {
+  def countryInfoToJson(data: (Country, Option[String], Feature)): JsObject = {
     def country = data._1
     def names   = data._2
     def feature = data._3
 
+    def name      = if(! names.isEmpty) names.get else feature.defaultName
+
     Json.obj(
-      "name"          -> names.name,
+      "name"          -> name,
       "geoname_id"    -> country.geonameId,
       "iso2_code"     -> country.iso2Code,
       "iso3_code"     -> country.iso3Code,
@@ -55,7 +57,7 @@ object JsonTemplates {
    * @param data data of the requested feature from the model
    * @return     JSON response object
    */
-  def featureInfoToJson(data: (Feature, NameTranslation)): JsObject = {
+  def featureInfoToJson(data: (Feature, Option[String])): JsObject = {
     def feature = data._1
     def names   = data._2
 
@@ -63,9 +65,10 @@ object JsonTemplates {
     /* Defined explicitly for clarification. */
     def longitude = coordinates._1
     def latitude  = coordinates._2
+    def name      = if(! names.isEmpty) names.get else feature.defaultName
 
     Json.obj(
-      "name"          -> names.name,
+      "name"          -> name,
       "geoname_id"    -> feature.geonameId,
       "latitude"      -> latitude,
       "longitude"     -> longitude,
@@ -80,7 +83,7 @@ object JsonTemplates {
    * @param data list of features received from the model
    * @return     JSON response object
    */
-  def childrenToJson(data: List[(Feature, NameTranslation)]): JsObject = {
+  def childrenToJson(data: List[(Feature, Option[String])]): JsObject = {
     Json.obj(
       "children" -> data.map {child => featureInfoToJson(child)}
     )
@@ -106,7 +109,7 @@ object JsonTemplates {
    * @param data list of features received from the model
    * @return     JSON response object
    */
-  def siblingsToJson(data: List[(Feature, NameTranslation)]): JsObject = {
+  def siblingsToJson(data: List[(Feature, Option[String])]): JsObject = {
     Json.obj(
       "siblings" -> data.map {sibling => featureInfoToJson(sibling)}
     )

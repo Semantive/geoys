@@ -26,6 +26,7 @@ import com.vividsolutions.jts.geom.Point
  */
 case class Feature(
   geonameId:      Int,
+  defaultName:    String,
   featureClass:   String,
   featureCode:    String,
   admCode:        Option[String],

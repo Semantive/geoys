@@ -49,31 +49,39 @@ object Countries extends Table[Country]("country") with DAO[Country] {
 
   // </editor-fold>
 
-  def getByGeoIdWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, NameTranslation, Feature)] = {
+  /**
+   *
+   * @param geonameId
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getByGeoIdWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, Option[String], Feature)] = {
+
     (for {
-      c <- Query(Countries)
-      n <- Query(NameTranslations)
-      f <- Query(Features)
+      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
+      c <- Countries
 
       if c.geonameId === geonameId &&
-         f.geonameId === c.geonameId &&
-         c.geonameId === n.geonameId &&
-         n.language === lang &&
-         n.isOfficial === true
-    } yield (c, n, f)).firstOption
+        f.geonameId === c.geonameId
+    } yield (c, n.name.?, f)).firstOption
   }
 
-  def getByIsoWithName(iso2Code: String, lang: String)(implicit session: Session): Option[(Country, NameTranslation, Feature)] = {
+  /**
+   *
+   * @param iso2Code
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getByIsoWithName(iso2Code: String, lang: String)(implicit session: Session): Option[(Country, Option[String], Feature)] = {
+
     (for {
-      c <- Query(Countries)
-      n <- Query(NameTranslations)
-      f <- Query(Features)
+      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
+      c <- Countries
 
       if c.iso2Code === iso2Code &&
-        f.geonameId === c.geonameId &&
-        c.geonameId === n.geonameId &&
-        n.language === lang &&
-        n.isOfficial === true
-    } yield (c, n, f)).firstOption
+        f.geonameId === c.geonameId
+    } yield (c, n.name.?, f)).firstOption
   }
 }

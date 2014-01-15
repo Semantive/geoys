@@ -60,7 +60,7 @@ object Basic extends Controller {
    */
   def featureInfo(geonameId: Int, lang: String) = DBAction { implicit rs =>
 
-    val feature = Features.getByGeoIdWithName(geonameId, lang)
+    val feature = Features.getWithName(geonameId, lang)
 
     if(feature.isEmpty)
       NotFound

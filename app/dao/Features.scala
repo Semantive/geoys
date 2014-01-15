@@ -17,6 +17,7 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   // <editor-fold desc="Row definitions">
 
   def geonameId     = column[Int]("geoname_id", O.PrimaryKey)
+  def defaultName   = column[String]("default_name", O.DBType("VARCHAR(200)"))
   def featureClass  = column[String]("feature_class", O.DBType("CHAR(1)"))
   def featureCode   = column[String]("feature_code", O.DBType("VARCHAR(10)"))
   def admCode       = column[String]("adm_code", O.DBType("VARCHAR(40)"), O.Nullable)
@@ -61,32 +62,40 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   // <editor-fold desc="Projections">
 
   /** Default projection. */
-  def * = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ location.? ~ population.? ~ wikiLink.? <> (Feature.apply _, Feature.unapply _)
+  def * = geonameId ~ defaultName ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ location.? ~ population.? ~ wikiLink.? <> (Feature.apply _, Feature.unapply _)
 
   // </editor-fold>
 
-  def getByGeoIdWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Feature, NameTranslation)] = {
-    (for {
-      f <- Query(Features)
-      n <- Query(NameTranslations)
+  /**
+   *
+   * @param geonameId
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Feature, Option[String])] = {
 
-      if f.geonameId === geonameId &&
-        f.geonameId === n.geonameId &&
-        n.language === lang &&
-        n.isOfficial === true
-    } yield (f, n)).firstOption
+    (for {
+      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
+
+      if f.geonameId === geonameId
+    } yield (f, n.name.?)).firstOption
   }
 
-  def getChildren(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, NameTranslation)] = {
-    (for {
-      f <- Query(Features)
-      n <- Query(NameTranslations)
+  /**
+   *
+   * @param geonameId
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getChildren(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, Option[String])] = {
 
-      if f.parentId === geonameId &&
-        f.geonameId === n.geonameId &&
-        n.language === lang &&
-        n.isOfficial === true
-    } yield (f, n)).list
+    (for {
+      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
+
+      if f.parentId === geonameId
+    } yield (f, n.name.?)).list
   }
 
   /**
@@ -124,17 +133,21 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
     query.list(geonameId)
   }
 
-  def getSiblings(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, NameTranslation)] = {
+  /**
+   *
+   * @param geonameId
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getSiblings(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, Option[String])] = {
+
     (for {
-      f <- Query(Features)
-      n <- Query(NameTranslations)
-      p <- Query(Features)
+      p <- Features
+      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
 
       if p.geonameId === geonameId &&
-        f.parentId === f.parentId &&
-        f.geonameId === n.geonameId &&
-        n.language === lang &&
-        n.isOfficial === true
-    } yield (f, n)).list
+        f.parentId === p.parentId
+    } yield (f, n.name.?)).list
   }
 }

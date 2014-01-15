@@ -27,6 +27,7 @@ CREATE TABLE timezone (
 
 CREATE TABLE feature (
   geoname_id    INTEGER               PRIMARY KEY,
+  default_name  VARCHAR(200)                                            NOT NULL,
   feature_class CHAR(1)                                                 NOT NULL,
   feature_code  VARCHAR(10)                                             NOT NULL,
   adm_code      VARCHAR(40),
