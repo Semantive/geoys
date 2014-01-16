@@ -49,6 +49,8 @@ object Countries extends Table[Country]("country") with DAO[Country] {
 
   // </editor-fold>
 
+  // <editor-fold desc="Retrieve methods">
+
   /**
    *
    * @param geonameId
@@ -59,7 +61,7 @@ object Countries extends Table[Country]("country") with DAO[Country] {
   def getByGeoIdWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, Option[String], Feature)] = {
 
     (for {
-      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
+      (f, n) <- joinFeaturesWithNames(lang)
       c <- Countries
 
       if c.geonameId === geonameId &&
@@ -77,11 +79,13 @@ object Countries extends Table[Country]("country") with DAO[Country] {
   def getByIsoWithName(iso2Code: String, lang: String)(implicit session: Session): Option[(Country, Option[String], Feature)] = {
 
     (for {
-      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
+      (f, n) <- joinFeaturesWithNames(lang)
       c <- Countries
 
       if c.iso2Code === iso2Code &&
         f.geonameId === c.geonameId
     } yield (c, n.name.?, f)).firstOption
   }
+
+  // </editor-fold>
 }

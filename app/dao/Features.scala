@@ -66,21 +66,7 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
 
   // </editor-fold>
 
-  /**
-   *
-   * @param geonameId
-   * @param lang
-   * @param session
-   * @return
-   */
-  def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Feature, Option[String])] = {
-
-    (for {
-      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
-
-      if f.geonameId === geonameId
-    } yield (f, n.name.?)).firstOption
-  }
+  // <editor-fold desc="Retrieve methods">
 
   /**
    *
@@ -89,14 +75,18 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
    * @param session
    * @return
    */
-  def getChildren(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, Option[String])] = {
+  def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Feature, Option[String])] =
+    matchFeatureWithName(lang).filter(_._1.geonameId === geonameId).firstOption
 
-    (for {
-      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
-
-      if f.parentId === geonameId
-    } yield (f, n.name.?)).list
-  }
+  /**
+   *
+   * @param geonameId
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getChildren(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, Option[String])] =
+    matchFeatureWithName(lang).filter(_._1.parentId === geonameId).list
 
   /**
    * Returns hierarchy of the feature - the feature itself and all of it's parents.
@@ -133,6 +123,8 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
     query.list(geonameId)
   }
 
+
+
   /**
    *
    * @param geonameId
@@ -144,10 +136,12 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
 
     (for {
       p <- Features
-      (f, n) <- Features leftJoin (for { nt <- NameTranslations if nt.language === lang && nt.isOfficial === true} yield nt) on (_.geonameId === _.geonameId)
+      (f, n) <- joinFeaturesWithNames(lang)
 
-      if p.geonameId === geonameId &&
-        f.parentId === p.parentId
+      if p.geonameId === geonameId && f.parentId === p.parentId
     } yield (f, n.name.?)).list
   }
+
+  // </editor-fold>
+
 }
