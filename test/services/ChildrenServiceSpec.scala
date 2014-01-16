@@ -31,7 +31,7 @@ class ChildrenServiceSpec extends Specification {
       val geoysJsonResponse: JsValue = Json.parse(contentAsString(result))
 
       val childrensIds = geoysJsonResponse \ "children" \\ "geoname_id"
-      childrensIds.foreach(x => {println(x); GEOID_CONINENTS must contain(x.as[Int])})
+      childrensIds.foreach(x => { GEOID_CONINENTS must contain(x.as[Int]) })
     }
   }
 }
