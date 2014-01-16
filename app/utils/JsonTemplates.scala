@@ -11,20 +11,6 @@ import play.api.libs.json._
 object JsonTemplates {
 
   /**
-   * Extracts longitude and latitude from JTS Point.
-   *
-   * @param point point of the feature (JTS Point)
-   * @return      point's coordinates in format (longitude, latitude)
-   */
-  private def extractCoordinates(point: Option[Point]): (Option[Double], Option[Double]) = {
-
-    if(point == None)
-      (None, None)
-    else
-      (Option.apply(point.get.getX()),Option.apply(point.get.getY()))
-  }
-
-  /**
    * Projection of CountryInfo REST service.
    *
    * @param data data of the requested country from the model
@@ -62,18 +48,15 @@ object JsonTemplates {
     def feature = data._1
     def names   = data._2
 
-    def coordinates = extractCoordinates(feature.location)
     /* Defined explicitly for clarification. */
-    def longitude = coordinates._1
-    def latitude  = coordinates._2
     def name      = if(! names.isEmpty) names.get else feature.defaultName
 
     Json.obj(
       "feature" -> Json.obj(
         "name"          -> name,
         "geoname_id"    -> feature.geonameId,
-        "latitude"      -> latitude,
-        "longitude"     -> longitude,
+        "latitude"      -> feature.latitude,
+        "longitude"     -> feature.longitude,
         "population"    -> feature.population,
         "wiki_link"     -> feature.wikiLink
       )

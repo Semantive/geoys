@@ -92,8 +92,8 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
    * Returns hierarchy of the feature - the feature itself and all of it's parents.
    *
    * @todo return (Feature, NameTranslation) tuple instead of geonameId only. Problems:
-   *        # creating Feature case class requires 14 of r.<< - find a better solution
-   *        # no implicit conversion from PostGIS Point (DB) to JTS Point (case class)
+   *        # creating Feature case class requires 14 of r.<< - better solution preferred
+   *        # no implicit conversion from PostGIS Point (DB) to JTS Point (for case class)
    *
    * @param geonameId id of the feature to search for
    * @param lang      preferred language of the names in the output
@@ -122,8 +122,6 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
                                                    """)
     query.list(geonameId)
   }
-
-
 
   /**
    *
