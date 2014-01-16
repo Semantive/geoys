@@ -37,17 +37,18 @@ object JsonTemplates {
 
     def name      = if(! names.isEmpty) names.get else feature.defaultName
 
-    Json.obj(
-      "name"          -> name,
-      "geoname_id"    -> country.geonameId,
-      "iso2_code"     -> country.iso2Code,
-      "iso3_code"     -> country.iso3Code,
-      "iso_numeric"   -> country.isoNumeric,
-      "fips_code"     -> country.fipsCode,
-      "population"    -> country.population,
-      "tld"           -> country.topLevelDomain,
-      "currency_code" -> country.currencyCode,
-      "wiki_link"     -> feature.wikiLink
+    Json.obj("country" -> Json.obj(
+        "name"          -> name,
+        "geoname_id"    -> country.geonameId,
+        "iso2_code"     -> country.iso2Code,
+        "iso3_code"     -> country.iso3Code,
+        "iso_numeric"   -> country.isoNumeric,
+        "fips_code"     -> country.fipsCode,
+        "population"    -> country.population,
+        "tld"           -> country.topLevelDomain,
+        "currency_code" -> country.currencyCode,
+        "wiki_link"     -> feature.wikiLink
+      )
     )
   }
 
@@ -68,12 +69,14 @@ object JsonTemplates {
     def name      = if(! names.isEmpty) names.get else feature.defaultName
 
     Json.obj(
-      "name"          -> name,
-      "geoname_id"    -> feature.geonameId,
-      "latitude"      -> latitude,
-      "longitude"     -> longitude,
-      "population"    -> feature.population,
-      "wiki_link"     -> feature.wikiLink
+      "feature" -> Json.obj(
+        "name"          -> name,
+        "geoname_id"    -> feature.geonameId,
+        "latitude"      -> latitude,
+        "longitude"     -> longitude,
+        "population"    -> feature.population,
+        "wiki_link"     -> feature.wikiLink
+      )
     )
   }
 
