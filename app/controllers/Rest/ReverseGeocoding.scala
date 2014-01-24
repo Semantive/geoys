@@ -1,6 +1,11 @@
 package controllers.Rest
 
 import play.api.mvc._
+import play.api.db.slick._
+import play.api.Play.current
+
+import dao._
+import utils.JsonTemplates
 
 /**
  * REST service controller for Reverse Geocoding search services.
@@ -30,5 +35,13 @@ object ReverseGeocoding extends Controller {
    * @param limit     max number of results
    * @return          JSON
    */
-  def findNearby(longitude: Double, latitude: Double, limit: Int) = TODO
+  def findNearby(longitude: Double, latitude: Double, limit: Int) = DBAction { implicit rs =>
+
+    val features = Features.getByPoint(longitude, latitude, 3)
+
+    if(features.length == 0)
+      NotFound
+    else
+      Ok(JsonTemplates.childrenToJson(features))
+  }
 }

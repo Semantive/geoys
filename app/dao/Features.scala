@@ -78,6 +78,17 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Feature, Option[String])] =
     matchFeatureWithName(lang).filter(_._1.geonameId === geonameId).firstOption
 
+  def getByPoint(latitude: Double, longitude: Double, limit: Int)(implicit session: Session): List[(Feature, Option[String])] = {
+
+    implicit val getFeatureResult = GetResult(r => Feature(r.<<, r.<<, r.<<, r.<<,
+      r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
+
+      val query
+        = (Q.queryNA[(Feature, Option[String])]("SELECT feature.*, name_translation.name FROM feature LEFT JOIN name_translation ON feature.geoname_id = name_translation.geoname_id ORDER BY ST_DISTANCE_SPHERE(feature.location, ST_GEOMFROMTEXT('POINT(" + latitude + " " + longitude + ")', 4326))"))
+
+      query.list
+  }
+
   /**
    *
    * @param geonameId
@@ -100,7 +111,7 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
     implicit val getFeatureResult = GetResult(r => Feature(r.<<, r.<<, r.<<, r.<<,
       r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
 
-    val query = Q.query[(Int), (Feature, Option[String])]("""
+    val query = Q.query[(Int, String), (Feature, Option[String])]("""
     WITH RECURSIVE
       parent_feature(geoname_id, parent_id, depth, path) AS (
           SELECT
@@ -119,8 +130,9 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
       )
     SELECT feature.*, name_translation.name FROM feature LEFT JOIN name_translation ON feature.geoname_id = name_translation.geoname_id
       WHERE feature.geoname_id = ANY((SELECT path FROM parent_feature AS f WHERE f.geoname_id = ?)::integer[])
+      AND name_translation.language = ?
                                                           """)
-    query.list(geonameId)
+    query.list((geonameId, lang))
   }
 
   /**
