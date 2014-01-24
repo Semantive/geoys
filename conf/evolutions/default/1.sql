@@ -39,7 +39,7 @@ CREATE TABLE feature (
   parent_id     INTEGER               REFERENCES feature(geoname_id),
   timezone_id   INTEGER               REFERENCES timezone(id),
   population    BIGINT,
-  location      GEOMETRY(Point, 4326),
+  location      GEOMETRY(Point, 4326)                                   NOT NULL,
   wiki_link     VARCHAR(255)
 );
 

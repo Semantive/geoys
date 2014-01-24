@@ -1,7 +1,5 @@
 package utils
 
-import com.vividsolutions.jts.geom.Point
-
 import models._
 import play.api.libs.json._
 
@@ -21,7 +19,7 @@ object JsonTemplates {
     def names   = data._2
     def feature = data._3
 
-    def name      = if(! names.isEmpty) names.get else feature.defaultName
+    def name = if(! names.isEmpty) names.get else feature.defaultName
 
     Json.obj("country" -> Json.obj(
         "name"          -> name,
@@ -83,9 +81,9 @@ object JsonTemplates {
    * @param data  list of features received from the model
    * @return      JSON response object
    */
-  def hierarchyToJson(data: List[(Int)]): JsObject = {
+  def hierarchyToJson(data: List[(Feature, Option[String])]): JsObject = {
     Json.obj(
-      "hierarchy" -> data.map {child => Json.obj("geoname_id" -> child)}
+      "hierarchy" -> data.map {child => featureInfoToJson(child)}
     )
   }
 

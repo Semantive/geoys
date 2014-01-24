@@ -28,8 +28,8 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   def adm4Id        = column[Int]("adm4_id", O.Nullable)
   def parentId      = column[Int]("parent_id", O.Nullable)
   def timezoneId    = column[Int]("timezone_id", O.Nullable)
-  def location      = column[Point]("location", O.Nullable)
   def population    = column[Long]("population", O.Nullable)
+  def location      = column[Point]("location")
   def wikiLink      = column[String]("wiki_link", O.Nullable)
 
   // </editor-fold>
@@ -62,7 +62,7 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   // <editor-fold desc="Projections">
 
   /** Default projection. */
-  def * = geonameId ~ defaultName ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ location.? ~ population.? ~ wikiLink.? <> (Feature.apply _, Feature.unapply _)
+  def * = geonameId ~ defaultName ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ population.? ~ location ~ wikiLink.? <> (Feature.apply _, Feature.unapply _)
 
   // </editor-fold>
 
@@ -91,17 +91,16 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   /**
    * Returns hierarchy of the feature - the feature itself and all of it's parents.
    *
-   * @todo return (Feature, NameTranslation) tuple instead of geonameId only. Problems:
-   *        # creating Feature case class requires 14 of r.<< - better solution preferred
-   *        # no implicit conversion from PostGIS Point (DB) to JTS Point (for case class)
-   *
    * @param geonameId id of the feature to search for
    * @param lang      preferred language of the names in the output
    * @return          list of parent features, including given feature
    */
-  def getHierarchy(geonameId: Int, lang: String)(implicit session: Session): List[(Int)] = {
+  def getHierarchy(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, Option[String])] = {
 
-    val query = Q.query[(Int), (Int)]("""
+    implicit val getFeatureResult = GetResult(r => Feature(r.<<, r.<<, r.<<, r.<<,
+      r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
+
+    val query = Q.query[(Int), (Feature, Option[String])]("""
     WITH RECURSIVE
       parent_feature(geoname_id, parent_id, depth, path) AS (
           SELECT
@@ -118,8 +117,9 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
           WHERE
             f.parent_id = pf.geoname_id
       )
-    SELECT geoname_id FROM feature WHERE geoname_id = ANY((SELECT path FROM parent_feature AS f WHERE f.geoname_id = ?)::integer[])
-                                                   """)
+    SELECT feature.*, name_translation.name FROM feature LEFT JOIN name_translation ON feature.geoname_id = name_translation.geoname_id
+      WHERE feature.geoname_id = ANY((SELECT path FROM parent_feature AS f WHERE f.geoname_id = ?)::integer[])
+                                                          """)
     query.list(geonameId)
   }
 

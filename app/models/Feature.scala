@@ -39,8 +39,8 @@ case class Feature(
   adm4Id:         Option[Int],
   parentId:       Option[Int],
   timezoneId:     Option[Int],
-  location:       Option[Point],
   population:     Option[Long],
+  location:       Point,
   wikiLink:       Option[String]
 ) extends AbstractEntity {
 
@@ -48,21 +48,13 @@ case class Feature(
    * Getter for longitude (location of the feature).
    * @return  longitude
    */
-  def longitude: Option[Double] = {
-    if(location == None)
-      None
-    else
-      Option.apply(location.get.getX())
-  }
+  def longitude: Double =
+    location.getX()
 
   /**
    * Getter for latitude (location of the feature).
    * @return  latitude
    */
-  def latitude: Option[Double] = {
-    if(location == None)
-      None
-    else
-      Option.apply(location.get.getY())
-  }
+  def latitude: Double =
+    location.getY()
 }
