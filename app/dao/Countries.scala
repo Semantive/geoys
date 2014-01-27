@@ -2,6 +2,7 @@ package dao
 
 import utils.pgSlickDriver.simple._
 import models._
+import com.vividsolutions.jts.geom.Coordinate
 
 object Countries extends Table[Country]("country") with DAO[Country] {
 
@@ -85,6 +86,24 @@ object Countries extends Table[Country]("country") with DAO[Country] {
       if c.iso2Code === iso2Code &&
         f.geonameId === c.geonameId
     } yield (c, n.name.?, f)).firstOption
+  }
+
+  def getByPoint(latitude: Double, longitude: Double)
+                (implicit session: Session): Option[String] = {
+
+    val inputPoint = jtsGeometryFactory.createPoint(new Coordinate(longitude, latitude))
+    val radius = 100.0
+
+    val query = (for {
+      (f, c) <- Features innerJoin Countries on (_.countryId === _.geonameId)
+
+      if st_dwithin(f.location, inputPoint, radius)
+    } yield (f.location, c.iso2Code)).sortBy(tpl => st_distance_sphere(tpl._1, inputPoint))
+
+    if(query.firstOption == None)
+      None
+    else
+      Option.apply(query.firstOption.get._2)
   }
 
   // </editor-fold>

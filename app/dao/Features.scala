@@ -1,10 +1,10 @@
 package dao
 
-import com.vividsolutions.jts.geom.{PrecisionModel, Coordinate, Point}
+import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate, Point}
 import utils.pgSlickDriver.simple._
 import scala.slick.jdbc.{GetResult, StaticQuery => Q}
 
-import models.{NameTranslation, Feature}
+import models.Feature
 
 /**
  * Feature table definition.
@@ -86,18 +86,24 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
    * @param session
    * @return
    */
-  def getByPoint(latitude: Double, longitude: Double, limit: Int)(implicit session: Session): List[(Feature, Option[String])] = {
+  def getByPoint(latitude: Double, longitude: Double, radius: Double, limit: Int, featureClass: Option[String], featureCode: Option[String])
+      (implicit session: Session): List[(Feature, Option[String])] = {
 
-    val inputPoint = new Point(new Coordinate(longitude, latitude), new PrecisionModel(), 4326);
+    val geometryFactory = new GeometryFactory()
+
+    val inputPoint = geometryFactory.createPoint(new Coordinate(longitude, latitude))
     val language = "pl"
 
     val query = (for {
       (f, n) <- joinFeaturesWithNames(language)
 
-      if st_dwithin(f.location, inputPoint, 2000.0)
+      if st_dwithin(f.location, inputPoint, radius)
     } yield (f, n.name.?)).sortBy(tpl => st_distance_sphere(tpl._1.location, inputPoint))
 
-    query.list
+
+    /* todo: fclass, fcode */
+
+    query.take(limit).list
   }
 
   /**

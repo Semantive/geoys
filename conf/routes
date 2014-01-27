@@ -12,11 +12,13 @@ GET        /rest/countryInfo/iso         controllers.Rest.Basic.countryInfoByIso
 
 GET        /rest/featureInfo             controllers.Rest.Basic.featureInfo(geonameId: Int, lang: String)
 
+GET        /rest/fulltext                controllers.Rest.Fulltext.fulltextSearch(input: String, limit: Int ?= 5, lang: String ?= "PL")
+
 GET        /rest/hierarchy               controllers.Rest.Hierarchy.hierarchy(geonameId: Int, lang: String)
 
 GET        /rest/siblings                controllers.Rest.Hierarchy.siblings(geonameId: Int, lang: String)
 
-GET        /rest/findNearby              controllers.Rest.ReverseGeocoding.findNearby(longitude: Double, latitude: Double, limit: Int = 3)
+GET        /rest/findNearby              controllers.Rest.ReverseGeocoding.findNearby(longitude: Double, latitude: Double, radius: Double ?= 50000.0, limit: Int ?= 10, featureClass: Option[String] ?= None, featureCode: Option[String] ?= None)
 
 # todo: /rest/findNearby
 

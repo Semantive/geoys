@@ -2,9 +2,12 @@ package dao
 
 import utils.pgSlickDriver.simple._
 import models.AbstractEntity
+import com.vividsolutions.jts.geom.{PrecisionModel, GeometryFactory}
 
 trait DAO[T <: AbstractEntity] {
   self: Table[T] =>
+
+  lazy val jtsGeometryFactory = new GeometryFactory(new PrecisionModel(), 4326)
 
   /**
    * Creates left join of features with translated names in given language.

@@ -74,6 +74,17 @@ object JsonTemplates {
   }
 
   /**
+   *
+   * @param data
+   * @return
+   */
+  def fulltextToJson(data: List[(Feature, Option[String])]): JsObject = {
+    Json.obj(
+      "features" -> data.map {child => featureInfoToJson(child)}
+    )
+  }
+
+  /**
    * Projection of Hierarchy REST service.
    *
    * @todo update so it can show all data of the retrieved features (@see dao.Features).
