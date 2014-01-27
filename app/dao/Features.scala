@@ -1,6 +1,6 @@
 package dao
 
-import com.vividsolutions.jts.geom.Point
+import com.vividsolutions.jts.geom.{PrecisionModel, Coordinate, Point}
 import utils.pgSlickDriver.simple._
 import scala.slick.jdbc.{GetResult, StaticQuery => Q}
 
@@ -78,15 +78,26 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Feature, Option[String])] =
     matchFeatureWithName(lang).filter(_._1.geonameId === geonameId).firstOption
 
+  /**
+   *
+   * @param latitude
+   * @param longitude
+   * @param limit
+   * @param session
+   * @return
+   */
   def getByPoint(latitude: Double, longitude: Double, limit: Int)(implicit session: Session): List[(Feature, Option[String])] = {
 
-    implicit val getFeatureResult = GetResult(r => Feature(r.<<, r.<<, r.<<, r.<<,
-      r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
+    val inputPoint = new Point(new Coordinate(longitude, latitude), new PrecisionModel(), 4326);
+    val language = "pl"
 
-      val query
-        = (Q.queryNA[(Feature, Option[String])]("SELECT feature.*, name_translation.name FROM feature LEFT JOIN name_translation ON feature.geoname_id = name_translation.geoname_id ORDER BY ST_DISTANCE_SPHERE(feature.location, ST_GEOMFROMTEXT('POINT(" + latitude + " " + longitude + ")', 4326))"))
+    val query = (for {
+      (f, n) <- joinFeaturesWithNames(language)
 
-      query.list
+      if st_dwithin(f.location, inputPoint, 2000.0)
+    } yield (f, n.name.?)).sortBy(tpl => st_distance_sphere(tpl._1.location, inputPoint))
+
+    query.list
   }
 
   /**
