@@ -22,7 +22,15 @@ object ReverseGeocoding extends Controller {
    * @param latitude  latitude of the location
    * @return          JSON
    */
-  def countryCode(longitude: Double, latitude: Double) = TODO
+  def countryCode(longitude: Double, latitude: Double) = DBAction { implicit rs =>
+
+    val countryCode = Countries.getByPoint(longitude, latitude)
+
+    if(countryCode == None)
+      NotFound
+    else
+      Ok(countryCode.get)
+  }
 
   /**
    * FindNearby service.

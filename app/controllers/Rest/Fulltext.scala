@@ -1,6 +1,10 @@
 package controllers.Rest
 
 import play.api.mvc._
+import play.api.db.slick._
+import play.api.Play.current
+import dao.NameTranslations
+import utils.JsonTemplates
 
 /**
  * REST service controller for fulltext search services.
@@ -20,5 +24,13 @@ object Fulltext extends Controller {
    * @param lang      preferred lang of names of the returned features
    * @return          JSON
    */
-  def fulltextSearch(input: String, limit: Int, lang: String) = TODO
+  def fulltextSearch(input: String, limit: Int, lang: String) = DBAction { implicit rs =>
+
+    val names = NameTranslations.searchFulltext(input)
+
+    if(names.length == 0)
+      NotFound
+    else
+      Ok(JsonTemplates.fulltextToJson(names))
+  }
 }

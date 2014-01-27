@@ -91,7 +91,6 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
 
     val geometryFactory = new GeometryFactory()
 
-//    val inputPoint = new Point(, new PrecisionModel(), 4326);
     val inputPoint = geometryFactory.createPoint(new Coordinate(longitude, latitude))
     val language = "pl"
 

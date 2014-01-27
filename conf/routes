@@ -12,6 +12,8 @@ GET        /rest/countryInfo/iso         controllers.Rest.Basic.countryInfoByIso
 
 GET        /rest/featureInfo             controllers.Rest.Basic.featureInfo(geonameId: Int, lang: String)
 
+GET        /rest/fulltext                controllers.Rest.Fulltext.fulltextSearch(input: String, limit: Int ?= 5, lang: String ?= "PL")
+
 GET        /rest/hierarchy               controllers.Rest.Hierarchy.hierarchy(geonameId: Int, lang: String)
 
 GET        /rest/siblings                controllers.Rest.Hierarchy.siblings(geonameId: Int, lang: String)
