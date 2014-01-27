@@ -73,6 +73,12 @@ object JsonTemplates {
     )
   }
 
+  def findNearbyToJson(data: List[(Feature, Option[String], Option[String])]): JsObject = {
+    Json.obj(
+      "features" -> data.map {child => featureInfoToJson((child._1, child._2))}
+    )
+  }
+
   /**
    *
    * @param data

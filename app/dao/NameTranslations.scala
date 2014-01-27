@@ -32,7 +32,7 @@ object NameTranslations extends Table[NameTranslation]("name_translation") with 
   def * = id.? ~ geonameId ~ language ~ name ~ isOfficial <> (NameTranslation.apply _, NameTranslation.unapply _)
 
   // </editor-fold>
-                                                       '
+
 
   /**
    *

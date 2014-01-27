@@ -43,13 +43,13 @@ object ReverseGeocoding extends Controller {
    * @param limit     max number of results
    * @return          JSON
    */
-  def findNearby(longitude: Double, latitude: Double, radius: Double, limit: Int, featureClass: Option[String], featureCode: Option[String]) = DBAction { implicit rs =>
+  def findNearby(longitude: Double, latitude: Double, radius: Double, limit: Int, featureClass: Option[String], featureCode: Option[String], countryBias: Option[String]) = DBAction { implicit rs =>
 
-    val features = Features.getByPoint(longitude, latitude, radius, limit, featureClass, featureCode)
+    val features = Features.getByPoint(longitude, latitude, radius, limit, featureClass, featureCode, countryBias)
 
     if(features.length == 0)
       NotFound
     else
-      Ok(JsonTemplates.childrenToJson(features))
+      Ok(JsonTemplates.findNearbyToJson(features))
   }
 }
