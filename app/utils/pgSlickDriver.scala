@@ -22,6 +22,7 @@ trait pgSlickDriver extends PostgresDriver
     implicit val pointConverter = GetResult(r => new GeometryTypeMapper[Point].nextValue(r))
 
     val st_distance_sphere = SimpleFunction.binary[Point, Point, Double]("ST_DISTANCE_SPHERE")
+    val st_dwithin = SimpleFunction.ternary[Point, Point, Double, Boolean]("ST_DWITHIN")
   }
 
 
