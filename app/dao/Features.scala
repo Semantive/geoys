@@ -1,10 +1,10 @@
 package dao
 
-import com.vividsolutions.jts.geom.{GeometryFactory, PrecisionModel, Coordinate, Point}
+import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate, Point}
 import utils.pgSlickDriver.simple._
 import scala.slick.jdbc.{GetResult, StaticQuery => Q}
 
-import models.{NameTranslation, Feature}
+import models.Feature
 
 /**
  * Feature table definition.
