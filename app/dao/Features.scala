@@ -34,7 +34,7 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   // <editor-fold desc="Foreign keys">
 
   /** REFERENCES key on country.id. */
-  def fkCountry  = foreignKey("fk_feature_country", countryId, Features)(_.geonameId)
+  def fkCountry  = foreignKey("fk_feature_country", countryId, Countries)(_.geonameId)
 
   /** REFERENCES key on adm1.id. */
   def fkAdm1     = foreignKey("fk_feature_adm1", adm1Id, Features)(_.geonameId)
@@ -61,5 +61,9 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   /** Default projection. */
   def * = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ location.? ~ population.? ~ wikiLink.? <> (Feature.apply _, Feature.unapply _)
 
-  // </editor-fold>
+  def adm1insertion = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? <>(f => new Feature(f._1, f._2, f._3, f._4, f._5), (f : Feature) => Some(f.geonameId, f.featureClass, f.featureCode, f.admCode, f.countryId))
+
+  def adm2insertion = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? <>(f => new Feature(f._1, f._2, f._3, f._4, f._5, f._6), (f : Feature) => Some(f.geonameId, f.featureClass, f.featureCode, f.admCode, f.countryId, f.adm1Id))
+
+    // </editor-fold>
 }

@@ -42,5 +42,8 @@ object Timezones extends Table[Timezone]("timezone") with DAO[Timezone] {
   /** Default projection. */
   def * = id.? ~ countryId ~ name ~ gmtOffset ~ dstOffset ~ rawOffset <>(Timezone.apply _, Timezone.unapply _)
 
+  /** Projection for insertion */
+  def insertion = countryId ~ name ~ gmtOffset ~ dstOffset ~ rawOffset <>(t => new Timezone(t._1, t._2, t._3, t._4, t._5) , (t : Timezone) => Some((t.countryId, t.name, t.gmtOffset, t.dstOffset, t.rawOffset)))
+
   // </editor-fold>
 }

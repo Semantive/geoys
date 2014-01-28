@@ -13,11 +13,20 @@ package models
  * @param rawOffset   raw offset.
  */
 case class Timezone(
-  id: Option[Int],
+  id:  Option[Int],
   countryId: Int,
   name: String,
   gmtOffset: Double,
   dstOffset: Double,
   rawOffset: Double
-) extends AbstractEntity
+) extends AbstractEntity {
+
+  def this(countryId: Int, name: String, gmtOffset: Double, dstOffset: Double, rawOffset: Double) =
+    this(None, countryId, name, gmtOffset, dstOffset, rawOffset)
+
+
+
+
+
+}
 

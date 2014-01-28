@@ -6,6 +6,7 @@ import play.api.Play.current
 import play.api.libs.json._
 import models._
 import dao._
+import loader.Loader
 
 /**
  *
@@ -50,6 +51,19 @@ object Rest extends Controller {
         NotFound
     else
         Ok(countryInfoToJson(country.get))
+  }
+
+  def loader() = DBAction {implicit rs =>
+    try {
+      new Loader().loadData()
+    } catch {
+      case e: java.sql.BatchUpdateException => {
+        e.printStackTrace()
+        e.getNextException.printStackTrace()
+
+      }
+    }
+    Ok("Seems to work fine")
   }
 
 }

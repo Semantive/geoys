@@ -28,7 +28,7 @@ object NameTranslations extends Table[NameTranslation]("name_translation") with 
   // <editor-fold desc="Projections">
 
   /** Default projection. */
-  def * = id.? ~ geonameId ~ language ~ name ~ isOfficial <> (NameTranslation.apply _, NameTranslation.unapply _)
+  def * = geonameId ~ language ~ name ~ isOfficial <> (NameTranslation.apply _, NameTranslation.unapply _)
 
   // </editor-fold>
 

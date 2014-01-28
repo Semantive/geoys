@@ -30,7 +30,7 @@ CREATE TABLE feature (
   feature_class CHAR(1)                                                 NOT NULL,
   feature_code  VARCHAR(10)                                             NOT NULL,
   adm_code      VARCHAR(40),
-  country_id    INTEGER               REFERENCES feature(geoname_id),
+  country_id    INTEGER               REFERENCES country(geoname_id),
   adm1_id       INTEGER               REFERENCES feature(geoname_id),
   adm2_id       INTEGER               REFERENCES feature(geoname_id),
   adm3_id       INTEGER               REFERENCES feature(geoname_id),

@@ -39,4 +39,19 @@ case class Feature(
   location:       Option[Point],
   population:     Option[Long],
   wikiLink:       Option[String]
-) extends AbstractEntity
+) extends AbstractEntity {
+
+  def this(geonameId: Int) =
+    this(geonameId, null, null, null, null, null, null, null, null, null, null, null, null, null)
+
+  def this(geonameId : Int, featureClass: String, featureCode: String, admCode : Option[String], countryId: Option[Int]) =
+    this(geonameId, featureClass, featureCode, admCode, countryId, null, null, null, null, null, null, null, null, null)
+
+  def this(geonameId : Int, featureClass: String, featureCode: String, admCode : Option[String], countryId: Option[Int], adm1 : Option[Int]) =
+    this(geonameId, featureClass, featureCode, admCode, countryId, adm1, null, null, null, null, null, null, null, null)
+
+  def this(geonameId : Int, featureClass: String, featureCode: String, location : Point, population: Option[Long], timezoneId: Option[Int]) =
+    this(geonameId, featureClass, featureCode, null, null, null, null, null, null, null, timezoneId, Option(location), population, null)
+
+
+}

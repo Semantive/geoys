@@ -37,9 +37,6 @@ object Countries extends Table[Country]("country") with DAO[Country] {
   /** UNIQUE index on iso2. */
   def idxIsoNum = index("uq_country_iso_num", isoNumeric, unique = true)
 
-  /** UNIQUE index on iso3. */
-  def idxFips = index("uq_country_fips", fipsCode, unique = true)
-
   // </editor-fold>
 
   // <editor-fold desc="Projections">
