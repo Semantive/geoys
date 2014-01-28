@@ -8,6 +8,8 @@ import com.vividsolutions.jts.geom.Point
 /**
  * Driver for slick-pg extension.
  * @author Amadeusz Kosik <akosik@semantive.com>
+ * @author Piotr Jędruszuk <pjedruszuk@semantive.com>
+
  * @see https://github.com/tminglei/slick-pg
  */
 trait pgSlickDriver extends PostgresDriver

@@ -11,6 +11,7 @@ import models.Feature
  *  For more detailed information about rows and stored data, @see{models.Feature}.
  *
  * @author Amadeusz Kosik <akosik@semantive.com>
+ * @author Piotr Jędruszuk <pjedruszuk@semantive.com>
  */
 object Features extends Table[Feature]("feature") with DAO[Feature] {
 

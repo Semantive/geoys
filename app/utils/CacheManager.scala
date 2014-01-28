@@ -4,6 +4,13 @@ import java.util.UUID
 import play.cache.Cache
 import java.util.concurrent.Callable
 
+/**
+ * Cache abstraction over Play Cache API, which provides support for multiple cache "buckets" using keys prefixing
+ * @author Piotr Jędruszuk <pjedruszuk@semantive.com>
+
+ * @param name logical key prefix
+ * @tparam T cache data type
+ */
 class CacheManager[T](name: String) {
 
   val identifier : String = name + UUID.randomUUID().toString

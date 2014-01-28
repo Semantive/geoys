@@ -10,6 +10,7 @@ import com.vividsolutions.jts.geom.Point
  *  Comment for location field: do not use it to retrieve lat/long, use latitude/longitude methods instead.
  *
  * @author Amadeusz Kosik <akosik@semantive.com>
+ * @author Piotr Jędruszuk <pjedruszuk@semantive.com>
  *
  * @param geonameId     id from the Geoname's data dump
  * @param featureClass  feature class (general type of the feature)
@@ -45,28 +46,28 @@ case class Feature(
 ) extends AbstractEntity {
 
   def this(geonameId: Int) =
-    this(geonameId, null, null, null, null, null, null, null, null, null, null, null, null, null)
+    this(geonameId, null,  null, null, null, null, null, null, null, null, null, null, null, null, null)
 
   def this(geonameId : Int, featureClass: String, featureCode: String, admCode : Option[String], countryId: Option[Int]) =
-    this(geonameId, featureClass, featureCode, admCode, countryId, null, null, null, null, null, null, null, null, null)
+    this(geonameId, null, featureClass, featureCode, admCode, countryId, null, null, null, null, null, null, null, null, null)
 
   def this(geonameId : Int, featureClass: String, featureCode: String, admCode : Option[String], countryId: Option[Int], adm1 : Option[Int]) =
-    this(geonameId, featureClass, featureCode, admCode, countryId, adm1, null, null, null, null, null, null, null, null)
+    this(geonameId, null, featureClass, featureCode, admCode, countryId, adm1, null, null, null, null, null, null, null, null)
 
-  def this(geonameId : Int, featureClass: String, featureCode: String, location : Point, population: Option[Long], timezoneId: Option[Int]) =
-    this(geonameId, featureClass, featureCode, null, null, null, null, null, null, null, timezoneId, Option(location), population, null)
+  def this(geonameId : Int, defaultName: String, featureClass: String, featureCode: String, location : Point, population: Option[Long], timezoneId: Option[Int]) =
+    this(geonameId, defaultName, featureClass, featureCode, null, null, null, null, null, null, null, timezoneId, population, location, null)
 
   /**
    * Getter for longitude (location of the feature).
    * @return  longitude
    */
   def longitude: Double =
-    location.getX()
+    location.getX
 
   /**
    * Getter for latitude (location of the feature).
    * @return  latitude
    */
   def latitude: Double =
-    location.getY()
+    location.getY
 }

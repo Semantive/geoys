@@ -3,30 +3,50 @@ package loader
 import utils.{CacheManager, Database}
 import dao._
 
-import scala.slick.jdbc.{StaticQuery => Q}
 import scala.slick.session.Database.threadLocalSession
 import utils.pgSlickDriver.simple._
 import scala.io.Source
 import play.Logger
-import models.Country
-import models.NameTranslation
-import scala.Some
-import models.Feature
-import models.Timezone
-import models.Continent
 import com.vividsolutions.jts.geom.{Coordinate, PrecisionModel, GeometryFactory}
 import org.apache.commons.lang.time.DurationFormatUtils
 import play.api.cache.EhCachePlugin
 import play.api.Play.current
+import play.Play._
+import scala.Some
+import models.Timezone
+import models.Country
+import models.NameTranslation
+import models.Feature
+import models.Continent
 
 
 /**
+ * Data loader. It uses Geonames free data as a data source.
+ * It's required, to have some data source files located in a data source folder:
+ * <ul>
+ *  <li>countryInfo.txt</li>
+ *  <li>timeZones.txt</li>
+ *  <li>admin1CodesASCII.txt</li>
+ *  <li>admin2Codes.txt</li>
+ *  <li>allCountries.txt</li>
+ *  <li>alternateNames.txt</li>
+ *  <li>hierarchy.txt</li>
+ * </ul>
+ *
+ * <p><strong>Warning:</strong> This implementation is time-optimized. As a consequence, it uses vast amount of memory to do needed transformations.
+ * It's recommended, to provide as much memory as it's possible. During data loading process, this runtime may take easily 10GB of heap memory
+ * or even more, if it's available. This implementation should scale on environments with less memory than recommended,
+ * but it may heavily decrease performance.<br/></p>
+ * <p>Because of the very big heap space, it's recommended to turn on parrallel GC or GC pauses may decrease computation speed.</p>
+ *
  * @author Piotr Jędruszuk <pjedruszuk@semantive.com>
  */
 class Loader {
 
   val database = Database.createConnection()
   val geometryFactory = new GeometryFactory(new PrecisionModel(), 4326)
+
+  val dataSourceFolder = application().configuration().getString("loader.datasource.location")
 
   def loadData() = {
     val startTimestamp = System.currentTimeMillis
@@ -111,7 +131,7 @@ class Loader {
 
 
     database withTransaction {
-      val source = Source.fromFile("/Users/piotrjedruszuk/Gisgraphy/countryInfo.txt")
+      val source = Source.fromFile(dataSourceFolder + "countryInfo.txt")
       val countries = source.getLines().filterNot(_.startsWith("#")).map(parseLine).filter(_ != null).toList
 
       Countries insertAll (countries: _*)
@@ -136,7 +156,7 @@ class Loader {
     }
 
     database withTransaction {
-      val source = Source.fromFile("/Users/piotrjedruszuk/Gisgraphy/timeZones.txt")
+      val source = Source.fromFile(dataSourceFolder + "timeZones.txt")
       val timeZones = source.getLines().drop(1).map(parseLine).toArray
       Timezones.insertion insertAll (timeZones: _*)
       Logger.info("Loaded timezones: " + timeZones.size)
@@ -187,6 +207,7 @@ class Loader {
       val timezone = getTimezone(splittedLine(17))
       new Feature(
         splittedLine(0).toInt,
+        splittedLine(1),
         "A", splittedLine(7),
         point(splittedLine(4).toDouble, splittedLine(5).toDouble),
         Option(splittedLine(14).toLong),
@@ -207,6 +228,7 @@ class Loader {
       } else {
         val feature = new Feature(
           splittedLine(0).toInt,
+          splittedLine(1),
           splittedLine(6),
           splittedLine(7),
           if (splittedLine(7) == "ADM4") Option(splittedLine(13)) else Option(splittedLine(12)),
@@ -226,8 +248,8 @@ class Loader {
           None,
           None,
           Option(timezone) match {case Some(t) => t.id; case None => None },
-          Option(point(splittedLine(4).toDouble, splittedLine(5).toDouble)),
           Option(splittedLine(14).toLong),
+          point(splittedLine(4).toDouble, splittedLine(5).toDouble),
           None
         )
 
@@ -248,6 +270,7 @@ class Loader {
 
       val feature = new Feature(
         splittedLine(0).toInt,
+        splittedLine(1),
         splittedLine(6),
         splittedLine(7),
         Option(splittedLine(12)),
@@ -270,8 +293,8 @@ class Loader {
         },
         None,
         Option(timezone) match {case Some(t) => t.id; case None => None },
-        Option(point(splittedLine(4).toDouble, splittedLine(5).toDouble)),
         Option(splittedLine(14).toLong),
+        point(splittedLine(4).toDouble, splittedLine(5).toDouble),
         None
       )
       features ++ (feature.geonameId.toString, feature)
@@ -297,12 +320,12 @@ class Loader {
     }
 
     database withTransaction {
-      val adm1source = Source.fromFile("/Users/piotrjedruszuk/Gisgraphy/admin1CodesASCII.txt")
+      val adm1source = Source.fromFile(dataSourceFolder + "admin1CodesASCII.txt")
       val adm1s = adm1source.getLines().map(parseAdmCodes1).toArray
       Features.adm1insertion insertAll (adm1s: _*)
       Logger.info("Loaded ADM1s: " + adm1s.size)
 
-      val adm2source = Source.fromFile("/Users/piotrjedruszuk/Gisgraphy/admin2Codes.txt")
+      val adm2source = Source.fromFile(dataSourceFolder + "admin2Codes.txt")
       val adm2s = adm2source.getLines().map(parseAdmCodes2).toArray
       Features.adm2insertion insertAll (adm2s: _*)
 
@@ -316,7 +339,7 @@ class Loader {
       database withTransaction {
         rows = 0
         Logger.info("Iteration " + iteration)
-        val allDataSource = Source.fromFile("/Users/piotrjedruszuk/Gisgraphy/allCountries.txt")
+        val allDataSource = Source.fromFile(dataSourceFolder + "allCountries.txt")
 
         val allData = allDataSource.getLines().filter(filter).map(selectParseFunction).filter(_ != null).toList
 
@@ -324,8 +347,8 @@ class Loader {
         val dataToUpdate = allData.filter(feature => feature.featureCode == "ADM1" || feature.featureCode == "ADM2")
         dataToUpdate.foreach {
           feature => {
-            val query = for {f <- Features if f.geonameId === feature.geonameId} yield f.location.? ~ f.population.? ~ f.timezoneId.?
-            query.update((feature.location, feature.population, feature.timezoneId))
+            val query = for {f <- Features if f.geonameId === feature.geonameId} yield f.defaultName ~ f.location ~ f.population.? ~ f.timezoneId.?
+            query.update((feature.defaultName, feature.location, feature.population, feature.timezoneId))
           }
         }
         println()
@@ -367,7 +390,7 @@ class Loader {
 
     Logger.info("Processing translations...")
 
-    val translationsSource = Source.fromFile("/Users/piotrjedruszuk/Gisgraphy/alternateNames.txt")
+    val translationsSource = Source.fromFile(dataSourceFolder + "alternateNames.txt")
     val translations = translationsSource.getLines().filter(_.split("\t")(2) != "link").map(parseTranslation).toList
 
     database withTransaction {
@@ -384,7 +407,7 @@ class Loader {
       (splittedLine(1).toInt, splittedLine(3))
     }
 
-    val linksSource = Source.fromFile("/Users/piotrjedruszuk/Gisgraphy/alternateNames.txt")
+    val linksSource = Source.fromFile(dataSourceFolder + "alternateNames.txt")
     val links = linksSource.getLines().filter(_.split("\t")(2) == "link").map(parseLinks).toList
 
     Logger.info("Processing Wikipedia links...")
@@ -412,7 +435,7 @@ class Loader {
       (splittedLine(0).toInt, splittedLine(1).toInt)
     }
 
-    val hierarchySource = Source.fromFile("/Users/piotrjedruszuk/Gisgraphy/hierarchy.txt")
+    val hierarchySource = Source.fromFile(dataSourceFolder + "hierarchy.txt")
     val hierarchy = hierarchySource.getLines().map(parseHierarchy).toList
 
     var rows = 0

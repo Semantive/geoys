@@ -2,26 +2,29 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET        /rest/children                controllers.Rest.Hierarchy.children(geonameId: Int, lang: String)
+GET        /rest/children               controllers.Rest.Hierarchy.children(geonameId: Int, lang: String)
 
-GET        /rest/countryCode             controllers.Rest.ReverseGeocoding.countryCode(longitude: Double, latitude: Double)
+GET        /rest/countryCode            controllers.Rest.ReverseGeocoding.countryCode(longitude: Double, latitude: Double)
 
-GET        /rest/countryInfo/id          controllers.Rest.Basic.countryInfoByGeoId(geonameId: Int, lang: String)
+GET        /rest/countryInfo/id         controllers.Rest.Basic.countryInfoByGeoId(geonameId: Int, lang: String)
 
-GET        /rest/countryInfo/iso         controllers.Rest.Basic.countryInfoByIso(iso2Code: String, lang: String)
+GET        /rest/countryInfo/iso        controllers.Rest.Basic.countryInfoByIso(iso2Code: String, lang: String)
 
-GET        /rest/featureInfo             controllers.Rest.Basic.featureInfo(geonameId: Int, lang: String)
+GET        /rest/featureInfo            controllers.Rest.Basic.featureInfo(geonameId: Int, lang: String)
 
-GET        /rest/fulltext                controllers.Rest.Fulltext.fulltextSearch(input: String, lang: String, featureClass: Option[String], featureCode: Option[String], countryBias: Option[String], limit: Option[Int])
+GET        /rest/fulltext               controllers.Rest.Fulltext.fulltextSearch(input: String, lang: String, featureClass: Option[String], featureCode: Option[String], countryBias: Option[String], limit: Option[Int])
 
-GET        /rest/hierarchy               controllers.Rest.Hierarchy.hierarchy(geonameId: Int, lang: String)
+GET        /rest/hierarchy              controllers.Rest.Hierarchy.hierarchy(geonameId: Int, lang: String)
 
-GET        /rest/siblings                controllers.Rest.Hierarchy.siblings(geonameId: Int, lang: String)
+GET        /rest/siblings               controllers.Rest.Hierarchy.siblings(geonameId: Int, lang: String)
 
-GET        /rest/findNearby              controllers.Rest.ReverseGeocoding.findNearby(longitude: Double, latitude: Double, language: String, radius: Double ?= 50000.0, limit: Int ?= 10, featureClass: Option[String] ?= None, featureCode: Option[String] ?= None, countryBias: Option[String] ?= None)
+GET        /rest/findNearby             controllers.Rest.ReverseGeocoding.findNearby(longitude: Double, latitude: Double, language: String, radius: Double ?= 50000.0, limit: Int ?= 10, featureClass: Option[String] ?= None, featureCode: Option[String] ?= None, countryBias: Option[String] ?= None)
 
 # todo: /rest/findNearby
 
+#Loader service
+GET        /rest/loader                 controllers.Rest.Loader.loader()
+
 
 # Map static resources from the /public folder to the /assets URL path
-GET        /assets/*file                 controllers.Assets.at(path="/public", file)
+GET        /assets/*file                controllers.Assets.at(path="/public", file)

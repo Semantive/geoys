@@ -19,13 +19,6 @@ object NameTranslations extends Table[NameTranslation]("name_translation") with 
 
   // </editor-fold>
 
-  // <editor-fold desc="Foreign keys">
-
-  /** REFERENCES key on country.id. */
-  def fkGeonameId   = foreignKey("fk_translation_geoname", geonameId, Features)(_.geonameId)
-
-  // </editor-fold>
-
   // <editor-fold desc="Projections">
 
   /** Default projection. */

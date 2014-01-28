@@ -5,6 +5,7 @@ import play.Play._
 import slick.session.{Database => SlickDatabase}
 
 /**
+ * Database abstraction for non-play managed datasources
  *
  * @author Piotr Jędruszuk <p.jedruszuk@semantive.com>
  */

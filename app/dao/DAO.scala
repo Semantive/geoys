@@ -3,9 +3,15 @@ package dao
 import utils.pgSlickDriver.simple._
 import models.AbstractEntity
 import com.vividsolutions.jts.geom.{PrecisionModel, GeometryFactory}
-import scala.slick.lifted
 import scala.slick.session.Session
 
+/**
+ * Common operations shared by all slick-based DAOs
+ *
+ * @author Piotr Jędruszuk <pjedruszuk@semantive.com>
+ * @author Amadeusz Kosik <akosik@semantive.com>
+ * @tparam T entity data type
+ */
 trait DAO[T <: AbstractEntity] {
   self: Table[T] =>
 
