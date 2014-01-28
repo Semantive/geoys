@@ -2,6 +2,7 @@ package dao
 
 import utils.pgSlickDriver.simple._
 import models._
+import com.vividsolutions.jts.geom.Coordinate
 
 object Countries extends Table[Country]("country") with DAO[Country] {
 
@@ -46,17 +47,61 @@ object Countries extends Table[Country]("country") with DAO[Country] {
 
   // </editor-fold>
 
-  def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, NameTranslation, Feature)] = {
+  // <editor-fold desc="Retrieve methods">
+
+  /**
+   *
+   * @param geonameId
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getByGeoIdWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Country, Option[String], Feature)] = {
+
     (for {
-      c <- Query(Countries)
-      n <- Query(NameTranslations)
-      f <- Query(Features)
+      (f, n) <- joinFeaturesWithNames(lang)
+      c <- Countries
 
       if c.geonameId === geonameId &&
-         f.geonameId === c.geonameId &&
-         c.geonameId === n.geonameId &&
-         n.language === lang &&
-         n.isOfficial === true
-    } yield (c, n, f)).firstOption
+        f.geonameId === c.geonameId
+    } yield (c, n.name.?, f)).firstOption
   }
+
+  /**
+   *
+   * @param iso2Code
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getByIsoWithName(iso2Code: String, lang: String)(implicit session: Session): Option[(Country, Option[String], Feature)] = {
+
+    (for {
+      (f, n) <- joinFeaturesWithNames(lang)
+      c <- Countries
+
+      if c.iso2Code === iso2Code &&
+        f.geonameId === c.geonameId
+    } yield (c, n.name.?, f)).firstOption
+  }
+
+  def getByPoint(latitude: Double, longitude: Double)
+                (implicit session: Session): Option[String] = {
+
+    val inputPoint = jtsGeometryFactory.createPoint(new Coordinate(longitude, latitude))
+    val radius = 100.0
+
+    val query = (for {
+      (f, c) <- Features innerJoin Countries on (_.countryId === _.geonameId)
+
+      if st_dwithin(f.location, inputPoint, radius)
+    } yield (f.location, c.iso2Code)).sortBy(tpl => st_distance_sphere(tpl._1, inputPoint))
+
+    if(query.firstOption == None)
+      None
+    else
+      Option.apply(query.firstOption.get._2)
+  }
+
+  // </editor-fold>
 }

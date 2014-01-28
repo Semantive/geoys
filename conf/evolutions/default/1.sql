@@ -1,4 +1,9 @@
 # --- !Ups
+
+---  TODO:
+--- Language dictionary
+--- Partitioning
+
 CREATE TABLE continent (
   geoname_id    INTEGER               PRIMARY KEY,
   code          CHAR(2)               UNIQUE                            NOT NULL
@@ -27,6 +32,7 @@ CREATE TABLE timezone (
 
 CREATE TABLE feature (
   geoname_id    INTEGER               PRIMARY KEY,
+  default_name  VARCHAR(200)                                            NOT NULL,
   feature_class CHAR(1)                                                 NOT NULL,
   feature_code  VARCHAR(10)                                             NOT NULL,
   adm_code      VARCHAR(40),
@@ -38,19 +44,31 @@ CREATE TABLE feature (
   parent_id     INTEGER               REFERENCES feature(geoname_id),
   timezone_id   INTEGER               REFERENCES timezone(id),
   population    BIGINT,
-  location      GEOMETRY(Point, 4326),
-  wiki_link     VARCHAR(255)
+  location      GEOMETRY(Point, 4326)                                   NOT NULL,
+  wiki_link     VARCHAR(255),
+  fulltext      TSVECTOR
 );
+
+CREATE INDEX feature_default_name_fulltext ON feature USING GIN(fulltext);
+
+CREATE TRIGGER feature_tsvector_update BEFORE INSERT OR UPDATE
+ON feature FOR EACH ROW EXECUTE PROCEDURE
+  tsvector_update_trigger(fulltext, 'pg_catalog.english', default_name);
 
 CREATE TABLE name_translation (
   id            SERIAL                PRIMARY KEY,
   geoname_id    INTEGER               REFERENCES feature(geoname_id)    NOT NULL,
   language      CHAR(8)               NOT NULL,
   name          VARCHAR(255)          NOT NULL,
-  is_official   BOOLEAN               NOT NULL
+  is_official   BOOLEAN               NOT NULL,
+  fulltext      TSVECTOR
 );
 
--- todo: partycje
+CREATE INDEX name_translation_name_fulltext ON name_translation USING GIN(name);
+
+CREATE TRIGGER name_translation_tsvector_update BEFORE INSERT OR UPDATE
+ON name_translation FOR EACH ROW EXECUTE PROCEDURE
+  tsvector_update_trigger(fulltext, 'pg_catalog.english', name);
 
 # --- !Downs
 

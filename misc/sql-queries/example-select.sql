@@ -33,3 +33,25 @@ WHERE
 ORDER BY
   ST_DISTANCE_SPHERE(ST_GeomFromText('POINT(21.06155 52.248403)'), pplx.location)
 LIMIT 50;
+
+
+-- Example of hierarchical query (returns all hierarchy from current geoname feature to the root).
+WITH RECURSIVE
+  parent_feature(geoname_id, parent_id, depth, path) AS (
+
+      SELECT
+        f.geoname_id, f.parent_id, 1::INT AS depth, ARRAY[f.geoname_id] AS path
+      FROM
+        feature AS f
+      WHERE f.parent_id IS NULL
+
+    UNION ALL
+
+      SELECT
+        f.geoname_id, f.parent_id, pf.depth + 1 AS depth, path || ARRAY[f.geoname_id]
+      FROM
+        parent_feature AS pf, feature AS f
+      WHERE
+        f.parent_id = pf.geoname_id
+)
+SELECT * FROM feature WHERE geoname_id = ANY((SELECT path FROM parent_feature AS f WHERE f.geoname_id = 798544)::integer[])

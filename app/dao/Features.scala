@@ -1,7 +1,9 @@
 package dao
 
-import com.vividsolutions.jts.geom.Point
+import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate, Point}
 import utils.pgSlickDriver.simple._
+import scala.slick.jdbc.{GetResult, StaticQuery => Q}
+
 import models.Feature
 
 /**
@@ -15,6 +17,7 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   // <editor-fold desc="Row definitions">
 
   def geonameId     = column[Int]("geoname_id", O.PrimaryKey)
+  def defaultName   = column[String]("default_name", O.DBType("VARCHAR(200)"))
   def featureClass  = column[String]("feature_class", O.DBType("CHAR(1)"))
   def featureCode   = column[String]("feature_code", O.DBType("VARCHAR(10)"))
   def admCode       = column[String]("adm_code", O.DBType("VARCHAR(40)"), O.Nullable)
@@ -25,8 +28,8 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   def adm4Id        = column[Int]("adm4_id", O.Nullable)
   def parentId      = column[Int]("parent_id", O.Nullable)
   def timezoneId    = column[Int]("timezone_id", O.Nullable)
-  def location      = column[Point]("location", O.Nullable)
   def population    = column[Long]("population", O.Nullable)
+  def location      = column[Point]("location")
   def wikiLink      = column[String]("wiki_link", O.Nullable)
 
   // </editor-fold>
@@ -59,11 +62,122 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
   // <editor-fold desc="Projections">
 
   /** Default projection. */
-  def * = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ location.? ~ population.? ~ wikiLink.? <> (Feature.apply _, Feature.unapply _)
+  def * = geonameId ~ defaultName ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? ~ adm2Id.? ~ adm3Id.? ~ adm4Id.? ~ parentId.? ~ timezoneId.? ~ population.? ~ location ~ wikiLink.? <> (Feature.apply _, Feature.unapply _)
 
   def adm1insertion = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? <>(f => new Feature(f._1, f._2, f._3, f._4, f._5), (f : Feature) => Some(f.geonameId, f.featureClass, f.featureCode, f.admCode, f.countryId))
 
   def adm2insertion = geonameId ~ featureClass ~ featureCode ~ admCode.? ~ countryId.? ~ adm1Id.? <>(f => new Feature(f._1, f._2, f._3, f._4, f._5, f._6), (f : Feature) => Some(f.geonameId, f.featureClass, f.featureCode, f.admCode, f.countryId, f.adm1Id))
 
-    // </editor-fold>
+  // </editor-fold>
+  
+  // <editor-fold desc="Retrieve methods">
+
+  /**
+   *
+   * @param geonameId
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getWithName(geonameId: Int, lang: String)(implicit session: Session): Option[(Feature, Option[String])] =
+    matchFeatureWithName(lang).filter(_._1.geonameId === geonameId).firstOption
+
+  /**
+   *
+   * @param latitude
+   * @param longitude
+   * @param limit
+   * @param session
+   * @return
+   */
+  def getByPoint(latitude: Double, longitude: Double, language: String, radius: Double, limit: Int, featureClass: Option[String], featureCode: Option[String], countryBias: Option[String])
+      (implicit session: Session): List[(Feature, Option[String], Option[String])] = {
+
+    val geometryFactory = new GeometryFactory()
+
+    val inputPoint = geometryFactory.createPoint(new Coordinate(longitude, latitude))
+
+    var query = (for {
+      ((f, n), c) <- joinFeaturesWithNames(language) leftJoin Countries on(_._1.countryId === _.geonameId)
+
+      if st_dwithin(f.location, inputPoint, radius)
+    } yield (f, n.name.?, c.iso2Code.?)).sortBy(tpl => st_distance_sphere(tpl._1.location, inputPoint))
+
+    if(! featureClass.isEmpty)
+      query = query.filter(t => t._1.featureClass === featureClass.get)
+
+    if(! featureCode.isEmpty)
+      query = query.filter(t => t._1.featureCode === featureCode.get)
+
+    if(! countryBias.isEmpty)
+      query = query.sortBy(t => t._3 =!= countryBias)
+
+    query.take(limit).list
+  }
+
+  /**
+   *
+   * @param geonameId
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getChildren(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, Option[String])] =
+    matchFeatureWithName(lang).filter(_._1.parentId === geonameId).list
+
+  /**
+   * Returns hierarchy of the feature - the feature itself and all of it's parents.
+   *
+   * @param geonameId id of the feature to search for
+   * @param lang      preferred language of the names in the output
+   * @return          list of parent features, including given feature
+   */
+  def getHierarchy(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, Option[String])] = {
+
+    implicit val getFeatureResult = GetResult(r => Feature(r.<<, r.<<, r.<<, r.<<,
+      r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<, r.<<))
+
+    val query = Q.query[(Int, String), (Feature, Option[String])]("""
+    WITH RECURSIVE
+      parent_feature(geoname_id, parent_id, depth, path) AS (
+          SELECT
+            f.geoname_id, f.parent_id, 1::INT AS depth, ARRAY[f.geoname_id] AS path
+          FROM
+            feature AS f
+          WHERE
+            f.parent_id IS NULL
+         UNION ALL
+          SELECT
+            f.geoname_id, f.parent_id, pf.depth + 1 AS depth, path || ARRAY[f.geoname_id]
+          FROM
+            parent_feature AS pf, feature AS f
+          WHERE
+            f.parent_id = pf.geoname_id
+      )
+    SELECT feature.*, name_translation.name FROM feature LEFT JOIN name_translation ON feature.geoname_id = name_translation.geoname_id
+      WHERE feature.geoname_id = ANY((SELECT path FROM parent_feature AS f WHERE f.geoname_id = ?)::integer[])
+      AND name_translation.language = ?
+                                                          """)
+    query.list((geonameId, lang))
+  }
+
+  /**
+   *
+   * @param geonameId
+   * @param lang
+   * @param session
+   * @return
+   */
+  def getSiblings(geonameId: Int, lang: String)(implicit session: Session): List[(Feature, Option[String])] = {
+
+    (for {
+      p <- Features
+      (f, n) <- joinFeaturesWithNames(lang)
+
+      if p.geonameId === geonameId && f.parentId === p.parentId
+    } yield (f, n.name.?)).list
+  }
+
+  // </editor-fold>
+
 }
