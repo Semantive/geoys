@@ -86,13 +86,12 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
    * @param session
    * @return
    */
-  def getByPoint(latitude: Double, longitude: Double, radius: Double, limit: Int, featureClass: Option[String], featureCode: Option[String], countryBias: Option[String])
+  def getByPoint(latitude: Double, longitude: Double, language: String, radius: Double, limit: Int, featureClass: Option[String], featureCode: Option[String], countryBias: Option[String])
       (implicit session: Session): List[(Feature, Option[String], Option[String])] = {
 
     val geometryFactory = new GeometryFactory()
 
     val inputPoint = geometryFactory.createPoint(new Coordinate(longitude, latitude))
-    val language = "pl"
 
     var query = (for {
       ((f, n), c) <- joinFeaturesWithNames(language) leftJoin Countries on(_._1.countryId === _.geonameId)
@@ -100,10 +99,14 @@ object Features extends Table[Feature]("feature") with DAO[Feature] {
       if st_dwithin(f.location, inputPoint, radius)
     } yield (f, n.name.?, c.iso2Code.?)).sortBy(tpl => st_distance_sphere(tpl._1.location, inputPoint))
 
+    if(! featureClass.isEmpty)
+      query = query.filter(t => t._1.featureClass === featureClass.get)
+
+    if(! featureCode.isEmpty)
+      query = query.filter(t => t._1.featureCode === featureCode.get)
+
     if(! countryBias.isEmpty)
       query = query.sortBy(t => t._3 =!= countryBias)
-
-    /* todo: fclass, fcode */
 
     query.take(limit).list
   }

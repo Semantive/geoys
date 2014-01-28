@@ -24,9 +24,9 @@ object Fulltext extends Controller {
    * @param lang      preferred lang of names of the returned features
    * @return          JSON
    */
-  def fulltextSearch(input: String, limit: Int, lang: String) = DBAction { implicit rs =>
+  def fulltextSearch(input: String, lang: String, featureClass: Option[String], featureCode: Option[String], countryBias: Option[String], limit: Option[Int]) = DBAction { implicit rs =>
 
-    val names = NameTranslations.searchFulltext(input)
+    val names = NameTranslations.searchFulltext(input, lang, featureClass, featureCode, countryBias, limit)
 
     if(names.length == 0)
       NotFound
