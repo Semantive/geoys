@@ -1,3 +1,5 @@
+import play.Project._
+
 name := "geoys"
 
 version := "1.0-SNAPSHOT"
