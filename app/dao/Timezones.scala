@@ -1,7 +1,7 @@
 package dao
 
 import scala.Predef._
-import utils.pgSlickDriver.simple._
+import utils.driver.pgSlickDriver.simple._
 import models.Timezone
 
 /**

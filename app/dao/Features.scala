@@ -1,7 +1,7 @@
 package dao
 
 import com.vividsolutions.jts.geom.{GeometryFactory, Coordinate, Point}
-import utils.pgSlickDriver.simple._
+import utils.driver.pgSlickDriver.simple._
 import scala.slick.jdbc.{GetResult, StaticQuery => Q}
 
 import models.Feature

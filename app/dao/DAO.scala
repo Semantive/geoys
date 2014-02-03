@@ -1,6 +1,6 @@
 package dao
 
-import utils.pgSlickDriver.simple._
+import utils.driver.pgSlickDriver.simple._
 import models.AbstractEntity
 import com.vividsolutions.jts.geom.{PrecisionModel, GeometryFactory}
 import scala.slick.session.Session

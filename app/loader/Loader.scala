@@ -4,7 +4,7 @@ import utils.{CacheManager, Database}
 import dao._
 
 import scala.slick.session.Database.threadLocalSession
-import utils.pgSlickDriver.simple._
+import utils.driver.pgSlickDriver.simple._
 import scala.io.Source
 import play.Logger
 import com.vividsolutions.jts.geom.{Coordinate, PrecisionModel, GeometryFactory}

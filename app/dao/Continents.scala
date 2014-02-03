@@ -1,6 +1,6 @@
 package dao
 
-import utils.pgSlickDriver.simple._
+import utils.driver.pgSlickDriver.simple._
 import models.Continent
 
 /**
